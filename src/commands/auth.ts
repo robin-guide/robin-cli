@@ -8,7 +8,7 @@ export function registerAuth(program: Command): void {
     .command('login')
     .description('Save API key and base URL to ~/.robin/config.json')
     .option('--key <key>', 'API key (non-interactive)')
-    .option('--url <url>', 'Base URL (non-interactive)', 'https://api.robinai.com')
+    .option('--url <url>', 'Base URL (non-interactive)', 'https://api.robin.guide')
     .action(async (opts) => {
       if (opts.key) {
         // Non-interactive
@@ -29,7 +29,7 @@ export function registerAuth(program: Command): void {
 
       const config = readConfig();
       const apiKey = await question('API key: ');
-      const defaultUrl = config.baseUrl ?? 'https://api.robinai.com';
+      const defaultUrl = config.baseUrl ?? 'https://api.robin.guide';
       const baseUrl = (await question(`Base URL [${defaultUrl}]: `)) || defaultUrl;
 
       rl.close();
@@ -50,16 +50,30 @@ export function registerAuth(program: Command): void {
 
   auth
     .command('status')
-    .description('Show current auth config')
-    .action(() => {
+    .description('Show current auth config and check API reachability')
+    .action(async () => {
       const config = readConfig();
       if (!config.apiKey) {
         console.log('Not logged in. Run `robin auth login`.');
         process.exit(1);
       }
+      const baseUrl = config.baseUrl ?? 'https://api.robin.guide';
       console.log(`API Key:       ${maskKey(config.apiKey)}`);
-      console.log(`Base URL:      ${config.baseUrl ?? 'https://api.robinai.com'}`);
+      console.log(`Base URL:      ${baseUrl}`);
       console.log(`Default Agent: ${config.defaultAgent ?? '(none)'}`);
       console.log(`Default Team:  ${config.defaultTeam ?? '(none)'}`);
+
+      // Check API reachability
+      try {
+        const statusUrl = `${baseUrl.replace(/\/$/, '')}/status`;
+        const res = await fetch(statusUrl, { signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          console.log(`API Status:    ✓ reachable (${res.status})`);
+        } else {
+          console.log(`API Status:    ⚠ ${res.status} ${res.statusText}`);
+        }
+      } catch {
+        console.log(`API Status:    ✗ unreachable`);
+      }
     });
 }

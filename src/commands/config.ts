@@ -42,7 +42,7 @@ export function registerConfig(program: Command): void {
           console.log(cfg.defaultTeam ?? '(not set)');
           break;
         case 'base-url':
-          console.log(cfg.baseUrl ?? 'https://api.robinai.com');
+          console.log(cfg.baseUrl ?? 'https://api.robin.guide');
           break;
         default:
           console.error(`Unknown config key: ${key}`);
@@ -57,6 +57,6 @@ export function registerConfig(program: Command): void {
       const cfg = readConfig();
       console.log(`default-agent  ${cfg.defaultAgent ?? '(not set)'}`);
       console.log(`default-team   ${cfg.defaultTeam ?? '(not set)'}`);
-      console.log(`base-url       ${cfg.baseUrl ?? 'https://api.robinai.com'}`);
+      console.log(`base-url       ${cfg.baseUrl ?? 'https://api.robin.guide'}`);
     });
 }

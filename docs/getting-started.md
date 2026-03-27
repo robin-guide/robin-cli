@@ -13,7 +13,7 @@ npm install -g @robinai/cli
 robin auth login
 
 # Non-interactive (for CI/scripts)
-robin auth login --key robin_your_api_key --url https://api.robinai.com
+robin auth login --key robin_your_api_key --url https://api.robin.guide
 ```
 
 ## Set Defaults

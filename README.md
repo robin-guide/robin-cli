@@ -1,6 +1,6 @@
 # Robin CLI 🪶
 
-Scriptable command-line access to the [Robin](https://robinai.com) platform. Built for humans and AI agents alike.
+Scriptable command-line access to the [Robin](https://robin.guide) platform. Built for humans and AI agents alike.
 
 ## Install
 

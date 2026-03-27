@@ -23,7 +23,7 @@ export class RobinAPIError extends Error {
 export function createClient(opts: GlobalOpts) {
   const config = readConfig();
   const resolvedApiKey = opts.apiKey ?? config.apiKey;
-  const baseUrl = (opts.baseUrl ?? config.baseUrl ?? 'https://api.robinai.com').replace(/\/$/, '');
+  const baseUrl = (opts.baseUrl ?? config.baseUrl ?? 'https://api.robin.guide').replace(/\/$/, '');
 
   if (!resolvedApiKey) {
     console.error('No API key configured. Run `robin auth login` or pass --api-key.');

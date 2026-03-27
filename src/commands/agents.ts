@@ -40,14 +40,29 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
     .description('Create a new agent')
     .requiredOption('--name <name>', 'Agent name')
     .option('--team <teamId>', 'Team ID')
-    .action(async (cmdOpts: { name: string; team?: string }) => {
+    .option('--goal-instructions <text>', 'Goal instructions — tell the agent HOW to act')
+    .option('--user-instructions <text>', 'User instructions — background knowledge for the agent')
+    .option('--model <model>', 'Model override (e.g. gpt-4o-mini)')
+    .option('--time-zone <tz>', 'Agent time zone (e.g. America/New_York)')
+    .action(async (cmdOpts: {
+      name: string;
+      team?: string;
+      goalInstructions?: string;
+      userInstructions?: string;
+      model?: string;
+      timeZone?: string;
+    }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
       const teamId = cmdOpts.team ?? opts.team;
       try {
         const data = await client.post<Record<string, unknown>>('/agents', {
           name: cmdOpts.name,
-          ...(teamId && { teamId }),
+          ...(teamId && { teamExternalId: teamId }),
+          ...(cmdOpts.goalInstructions && { goalInstructions: cmdOpts.goalInstructions }),
+          ...(cmdOpts.userInstructions && { userInstructions: cmdOpts.userInstructions }),
+          ...(cmdOpts.model && { model: cmdOpts.model }),
+          ...(cmdOpts.timeZone && { timeZone: cmdOpts.timeZone }),
         });
         if (opts.json) return outputJSON(data);
         renderUI(React.createElement(DetailView, { data, title: 'Agent Created' }));
@@ -58,11 +73,28 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
     .command('update <agentId>')
     .description('Update an agent')
     .option('--name <name>', 'New name')
-    .action(async (agentId: string, cmdOpts: { name?: string }) => {
+    .option('--goal-instructions <text>', 'Goal instructions — tell the agent HOW to act')
+    .option('--user-instructions <text>', 'User instructions — background knowledge for the agent')
+    .option('--model <model>', 'Model override (e.g. gpt-4o-mini)')
+    .option('--time-zone <tz>', 'Agent time zone (e.g. America/New_York)')
+    .option('--commit-message <msg>', 'Commit message for this config change')
+    .action(async (agentId: string, cmdOpts: {
+      name?: string;
+      goalInstructions?: string;
+      userInstructions?: string;
+      model?: string;
+      timeZone?: string;
+      commitMessage?: string;
+    }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
       const body: Record<string, unknown> = {};
       if (cmdOpts.name) body.name = cmdOpts.name;
+      if (cmdOpts.goalInstructions) body.goalInstructions = cmdOpts.goalInstructions;
+      if (cmdOpts.userInstructions) body.userInstructions = cmdOpts.userInstructions;
+      if (cmdOpts.model) body.model = cmdOpts.model;
+      if (cmdOpts.timeZone) body.timeZone = cmdOpts.timeZone;
+      if (cmdOpts.commitMessage) body.commitMessage = cmdOpts.commitMessage;
       try {
         const data = await client.post<Record<string, unknown>>(`/agents/${agentId}`, body);
         if (opts.json) return outputJSON(data);

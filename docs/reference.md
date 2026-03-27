@@ -30,7 +30,7 @@ Store API key and base URL.
 robin auth login
 
 # Non-interactive
-robin auth login --key robin_xxx --url https://api.robinai.com
+robin auth login --key robin_xxx --url https://api.robin.guide
 ```
 
 **Flags:** `--key <key>`, `--url <url>`
@@ -45,10 +45,19 @@ robin auth logout
 
 ### `robin auth status`
 
-Show current auth config (key is masked).
+Show current auth config (key is masked) and check API reachability via `GET /status`.
 
 ```bash
 robin auth status
+```
+
+Example output:
+```
+API Key:       robin_xxx...
+Base URL:      https://api.robin.guide
+Default Agent: agent_abc123
+Default Team:  (none)
+API Status:    ✓ reachable (200)
 ```
 
 ---
@@ -108,9 +117,15 @@ robin agents get agent_abc123 --json
 
 ```bash
 robin agents create --name "Support Bot" --team team_xyz
+robin agents create --name "Support Bot" --team team_xyz \
+  --goal-instructions "Always respond in a friendly tone." \
+  --user-instructions "Users are small business owners managing SMS conversations."
 ```
 
-**Flags:** `--name <name>` (required), `--team <teamId>`
+**Flags:** `--name <name>` (required), `--team <teamId>`, `--goal-instructions <text>`, `--user-instructions <text>`, `--model <model>`, `--time-zone <tz>`
+
+- `--goal-instructions` — Tells the agent HOW to act (personality, tone, rules)
+- `--user-instructions` — Provides the agent with background knowledge about users/context
 
 ### `robin agents update <agentId>`
 
@@ -118,9 +133,17 @@ robin agents create --name "Support Bot" --team team_xyz
 
 ```bash
 robin agents update agent_abc123 --name "New Name"
+robin agents update agent_abc123 \
+  --goal-instructions "Be concise and helpful." \
+  --user-instructions "Users are enterprise customers." \
+  --commit-message "Tighten instructions"
 ```
 
-**Flags:** `--name <name>`
+**Flags:** `--name <name>`, `--goal-instructions <text>`, `--user-instructions <text>`, `--model <model>`, `--time-zone <tz>`, `--commit-message <msg>`
+
+- `--goal-instructions` — Tells the agent HOW to act (personality, tone, rules)
+- `--user-instructions` — Provides the agent with background knowledge about users/context
+- `--commit-message` — Describes what changed (stored in configuration history)
 
 ### `robin agents threads <agentId>`
 
