@@ -4,16 +4,7 @@ import { createClient, handleError, GlobalOpts } from '../client.js';
 import { outputJSON, renderUI } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
-import { readConfig } from '../config.js';
-
-function resolveAgent(opts: GlobalOpts, cmdOpts: { agent?: string }): string {
-  const agentId = cmdOpts.agent ?? opts.agent ?? readConfig().defaultAgent;
-  if (!agentId) {
-    console.error('Agent ID required. Pass --agent <id> or set a default with `robin config set default-agent`.');
-    process.exit(1);
-  }
-  return agentId;
-}
+import { resolveAgent } from '../utils.js';
 
 export function registerCustomers(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const customers = program.command('customers').description('Manage customers');
@@ -111,12 +102,16 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      const body: Record<string, unknown> = { agentId };
+      const body: Record<string, unknown> = {};
       if (cmdOpts.name) body.name = cmdOpts.name;
       if (cmdOpts.notes) body.notes = cmdOpts.notes;
       if (cmdOpts.optedIn !== undefined) body.optedIn = cmdOpts.optedIn === 'true';
       try {
-        const data = await client.patch<Record<string, unknown>>(`/customers/${customerId}`, body);
+        // agentId goes as a query param, not in the PATCH body
+        const data = await client.patch<Record<string, unknown>>(
+          `/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`,
+          body,
+        );
         if (opts.json) return outputJSON(data);
         renderUI(React.createElement(DetailView, { data, title: 'Customer Updated' }));
       } catch (err) { handleError(err); }

@@ -4,16 +4,8 @@ import { createClient, handleError, GlobalOpts } from '../client.js';
 import { outputJSON, renderUI } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
-import { readConfig } from '../config.js';
-
-function resolveAgent(opts: GlobalOpts, cmdOpts: { agent?: string }): string {
-  const agentId = cmdOpts.agent ?? opts.agent ?? readConfig().defaultAgent;
-  if (!agentId) {
-    console.error('Agent ID required. Pass --agent <id> or set a default with `robin config set default-agent`.');
-    process.exit(1);
-  }
-  return agentId;
-}
+import { Confirm } from '../components/Confirm.js';
+import { resolveAgent } from '../utils.js';
 
 export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const tags = program.command('tags').description('Manage tags');
@@ -110,14 +102,32 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
   tags
     .command('delete <tagId>')
     .description('Delete a tag')
-    .action(async (tagId: string) => {
+    .option('--yes', 'Skip confirmation prompt')
+    .action(async (tagId: string, cmdOpts: { yes?: boolean }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        await client.delete<unknown>(`/tags/${tagId}`);
-        if (opts.json) return outputJSON({ deleted: true, tagId });
-        console.log(`✓ Tag ${tagId} deleted.`);
-      } catch (err) { handleError(err); }
+
+      const doDelete = async () => {
+        try {
+          await client.delete<unknown>(`/tags/${tagId}`);
+          if (opts.json) return outputJSON({ deleted: true, tagId });
+          console.log(`✓ Tag ${tagId} deleted.`);
+          process.exit(0);
+        } catch (err) { handleError(err); }
+      };
+
+      if (opts.json || cmdOpts.yes) {
+        await doDelete();
+        return;
+      }
+
+      renderUI(
+        React.createElement(Confirm, {
+          message: `Delete tag ${tagId}?`,
+          onConfirm: () => { doDelete(); },
+          onCancel: () => { console.log('Cancelled.'); process.exit(0); },
+        }),
+      );
     });
 
   tags

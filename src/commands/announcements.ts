@@ -4,6 +4,7 @@ import { createClient, handleError, GlobalOpts } from '../client.js';
 import { outputJSON, renderUI } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
+import { Confirm } from '../components/Confirm.js';
 
 export function registerAnnouncements(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const announcements = program.command('announcements').description('Manage announcements');
@@ -78,14 +79,32 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
   announcements
     .command('delete <announcementId>')
     .description('Delete an announcement')
-    .action(async (announcementId: string) => {
+    .option('--yes', 'Skip confirmation prompt')
+    .action(async (announcementId: string, cmdOpts: { yes?: boolean }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.delete<unknown>(`/announcements/${announcementId}`);
-        if (opts.json) return outputJSON(data);
-        console.log(`✓ Announcement ${announcementId} deleted.`);
-      } catch (err) { handleError(err); }
+
+      const doDelete = async () => {
+        try {
+          const data = await client.delete<unknown>(`/announcements/${announcementId}`);
+          if (opts.json) return outputJSON(data);
+          console.log(`✓ Announcement ${announcementId} deleted.`);
+          process.exit(0);
+        } catch (err) { handleError(err); }
+      };
+
+      if (opts.json || cmdOpts.yes) {
+        await doDelete();
+        return;
+      }
+
+      renderUI(
+        React.createElement(Confirm, {
+          message: `Delete announcement ${announcementId}?`,
+          onConfirm: () => { doDelete(); },
+          onCancel: () => { console.log('Cancelled.'); process.exit(0); },
+        }),
+      );
     });
 
   announcements
