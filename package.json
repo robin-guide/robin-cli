@@ -2,6 +2,7 @@
   "name": "@robinai/cli",
   "version": "0.1.0",
   "description": "Robin API CLI — scriptable access to the Robin platform",
+  "type": "module",
   "bin": {
     "robin": "./dist/index.js"
   },
@@ -18,7 +19,6 @@
     "ink-confirm-input": "^2.0.0",
     "ink-select-input": "^6.0.0",
     "ink-spinner": "^5.0.0",
-    "ink-table": "^3.0.0",
     "ink-text-input": "^6.0.0",
     "react": "^18.3.1"
   },

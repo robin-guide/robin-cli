@@ -1,4 +1,5 @@
 import React from 'react';
+import fs from 'fs';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
 import { outputJSON, renderUI } from '../ui/render.js';
@@ -127,7 +128,6 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      const fs = await import('fs');
       let contacts: unknown;
       try {
         contacts = JSON.parse(fs.readFileSync(cmdOpts.file, 'utf-8'));

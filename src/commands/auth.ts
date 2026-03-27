@@ -1,3 +1,4 @@
+import readline from 'readline';
 import { Command } from 'commander';
 import { readConfig, writeConfig, clearConfig, maskKey } from '../config.js';
 
@@ -21,7 +22,6 @@ export function registerAuth(program: Command): void {
       }
 
       // Interactive — use readline
-      const readline = await import('readline');
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
       const question = (q: string): Promise<string> =>
