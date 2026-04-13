@@ -9,7 +9,8 @@ import { registerTags } from './commands/tags.js';
 import { registerWebsites } from './commands/websites.js';
 import { registerInvitations } from './commands/invitations.js';
 import { registerConfig } from './commands/config.js';
-import { GlobalOpts } from './client.js';
+import { registerUI } from './commands/ui.js';
+import { GlobalOpts, formatError } from './client.js';
 
 const program = new Command();
 
@@ -37,8 +38,11 @@ registerAnnouncements(program, getGlobalOpts);
 registerTags(program, getGlobalOpts);
 registerWebsites(program, getGlobalOpts);
 registerInvitations(program, getGlobalOpts);
+registerUI(program);
 
 program.parseAsync(process.argv).catch((err) => {
-  console.error(err);
+  const { message, detail } = formatError(err);
+  console.error(message);
+  if (detail) console.error(detail);
   process.exit(1);
 });

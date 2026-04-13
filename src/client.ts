@@ -9,6 +9,17 @@ export interface GlobalOpts {
   verbose?: boolean;
 }
 
+/** The query-param value types accepted by the client. */
+export type QueryValue = string | string[] | number | boolean | undefined;
+
+/** Minimal interface for components that only need to call the API. */
+export interface RobinClient {
+  get: <T>(path: string, query?: Record<string, QueryValue>) => Promise<T>;
+  post: <T>(path: string, body?: unknown) => Promise<T>;
+  patch: <T>(path: string, body?: unknown) => Promise<T>;
+  delete: <T>(path: string) => Promise<T>;
+}
+
 export class RobinAPIError extends Error {
   constructor(
     public status: number,
@@ -98,23 +109,30 @@ export function createClient(opts: GlobalOpts) {
     post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
     patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
     delete: <T>(path: string) => request<T>('DELETE', path),
-  };
+  } as RobinClient;
+}
+
+export interface FormattedError {
+  message: string;
+  detail?: string;
+}
+
+export function formatError(err: unknown): FormattedError {
+  if (err instanceof RobinAPIError) {
+    const detail = err.body
+      ? typeof err.body === 'object' && err.body !== null && 'message' in err.body
+        ? String((err.body as { message: string }).message)
+        : JSON.stringify(err.body)
+      : undefined;
+    return { message: `Error ${err.status}: ${err.statusText}`, detail };
+  }
+  if (err instanceof Error) return { message: err.message };
+  return { message: 'An unknown error occurred' };
 }
 
 export function handleError(err: unknown): never {
-  if (err instanceof RobinAPIError) {
-    console.error(`Error ${err.status}: ${err.statusText}`);
-    if (err.body) {
-      const msg =
-        typeof err.body === 'object' && err.body !== null && 'message' in err.body
-          ? (err.body as { message: string }).message
-          : JSON.stringify(err.body);
-      console.error(msg);
-    }
-  } else if (err instanceof Error) {
-    console.error(err.message);
-  } else {
-    console.error('Unknown error', err);
-  }
+  const { message, detail } = formatError(err);
+  console.error(message);
+  if (detail) console.error(detail);
   process.exit(1);
 }

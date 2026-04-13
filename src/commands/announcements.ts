@@ -1,10 +1,11 @@
 import React from 'react';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
-import { outputJSON, renderUI } from '../ui/render.js';
+import { outputJSON, renderCommand, renderUI } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
-import { Confirm } from '../components/Confirm.js';
+import { DeleteFlow } from '../components/DeleteFlow.js';
+import { normalizeList } from '../utils.js';
 
 export function registerAnnouncements(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const announcements = program.command('announcements').description('Manage announcements');
@@ -15,12 +16,18 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
     .action(async (agentId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>(`/announcements/${agentId}`);
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : (data as { announcements?: unknown[] }).announcements ?? [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>(`/announcements/${agentId}`)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>(`/announcements/${agentId}`);
+          return React.createElement(Table, { data: normalizeList(data, 'announcements') });
+        },
+        'Fetching announcements…',
+      );
     });
 
   announcements
@@ -38,18 +45,26 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
     }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>(`/announcements/${agentId}`, {
-          title: cmdOpts.title,
-          content: cmdOpts.content,
-          sendAt: cmdOpts.sendAt,
-          ...(cmdOpts.tagIds && { tagIds: cmdOpts.tagIds }),
-          ...(cmdOpts.phoneNumbers && { phoneNumbers: cmdOpts.phoneNumbers }),
-          ...(cmdOpts.mediaAssetId && { mediaAssetId: cmdOpts.mediaAssetId }),
-        });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Announcement Created' }));
-      } catch (err) { handleError(err); }
+      const body = {
+        title: cmdOpts.title,
+        content: cmdOpts.content,
+        sendAt: cmdOpts.sendAt,
+        ...(cmdOpts.tagIds && { tagIds: cmdOpts.tagIds }),
+        ...(cmdOpts.phoneNumbers && { phoneNumbers: cmdOpts.phoneNumbers }),
+        ...(cmdOpts.mediaAssetId && { mediaAssetId: cmdOpts.mediaAssetId }),
+      };
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>(`/announcements/${agentId}`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>(`/announcements/${agentId}`, body);
+          return React.createElement(DetailView, { data, title: 'Announcement Created' });
+        },
+        'Creating announcement…',
+      );
     });
 
   announcements
@@ -69,11 +84,18 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
       if (cmdOpts.content) body.content = cmdOpts.content;
       if (cmdOpts.sendAt) body.sendAt = cmdOpts.sendAt;
       if (cmdOpts.tagIds) body.tagIds = cmdOpts.tagIds;
-      try {
-        const data = await client.patch<Record<string, unknown>>(`/announcements/${announcementId}`, body);
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Announcement Updated' }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.patch<Record<string, unknown>>(`/announcements/${announcementId}`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.patch<Record<string, unknown>>(`/announcements/${announcementId}`, body);
+          return React.createElement(DetailView, { data, title: 'Announcement Updated' });
+        },
+        'Updating announcement…',
+      );
     });
 
   announcements
@@ -84,25 +106,16 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
       const opts = getGlobalOpts();
       const client = createClient(opts);
 
-      const doDelete = async () => {
-        try {
-          const data = await client.delete<unknown>(`/announcements/${announcementId}`);
-          if (opts.json) return outputJSON(data);
-          console.log(`✓ Announcement ${announcementId} deleted.`);
-          process.exit(0);
-        } catch (err) { handleError(err); }
-      };
-
       if (opts.json || cmdOpts.yes) {
-        await doDelete();
+        try { outputJSON(await client.delete<unknown>(`/announcements/${announcementId}`)); }
+        catch (err) { handleError(err); }
         return;
       }
 
       renderUI(
-        React.createElement(Confirm, {
-          message: `Delete announcement ${announcementId}?`,
-          onConfirm: () => { doDelete(); },
-          onCancel: () => { console.log('Cancelled.'); process.exit(0); },
+        React.createElement(DeleteFlow, {
+          entityLabel: `announcement ${announcementId}`,
+          doDelete: () => client.delete<unknown>(`/announcements/${announcementId}`),
         }),
       );
     });
@@ -114,14 +127,20 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
     .action(async (agentId: string, cmdOpts: { tagIds?: string[] }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>(`/announcements/${agentId}/tag-counts`, {
-          tagIds: cmdOpts.tagIds,
-        });
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>(`/announcements/${agentId}/tag-counts`, { tagIds: cmdOpts.tagIds })); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>(`/announcements/${agentId}/tag-counts`, {
+            tagIds: cmdOpts.tagIds,
+          });
+          return React.createElement(Table, { data: normalizeList(data) });
+        },
+        'Fetching tag counts…',
+      );
     });
 
   announcements
@@ -136,15 +155,23 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
     }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>(`/announcements/${agentId}/singleton/`, {
-          customerId: cmdOpts.customer,
-          content: cmdOpts.content,
-          sendAt: cmdOpts.sendAt,
-          ...(cmdOpts.mediaAssetId && { mediaAssetId: cmdOpts.mediaAssetId }),
-        });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Message Scheduled' }));
-      } catch (err) { handleError(err); }
+      const body = {
+        customerId: cmdOpts.customer,
+        content: cmdOpts.content,
+        sendAt: cmdOpts.sendAt,
+        ...(cmdOpts.mediaAssetId && { mediaAssetId: cmdOpts.mediaAssetId }),
+      };
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>(`/announcements/${agentId}/singleton/`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>(`/announcements/${agentId}/singleton/`, body);
+          return React.createElement(DetailView, { data, title: 'Message Scheduled' });
+        },
+        'Scheduling message…',
+      );
     });
 }

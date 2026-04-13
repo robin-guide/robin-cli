@@ -1,11 +1,12 @@
 import React from 'react';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
-import { outputJSON, renderUI } from '../ui/render.js';
+import { outputJSON, renderCommand, renderUI } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
-import { Confirm } from '../components/Confirm.js';
-import { resolveAgent } from '../utils.js';
+import { DeleteFlow } from '../components/DeleteFlow.js';
+import { SuccessBox } from '../components/SuccessBox.js';
+import { resolveAgent, normalizeList } from '../utils.js';
 
 export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const tags = program.command('tags').description('Manage tags');
@@ -20,16 +21,22 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>('/tags', {
-          agentId,
-          cursor: cmdOpts.cursor,
-          limit: cmdOpts.limit,
-        });
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : (data as { tags?: unknown[] }).tags ?? [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>('/tags', { agentId, cursor: cmdOpts.cursor, limit: cmdOpts.limit })); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>('/tags', {
+            agentId,
+            cursor: cmdOpts.cursor,
+            limit: cmdOpts.limit,
+          });
+          return React.createElement(Table, { data: normalizeList(data, 'tags') });
+        },
+        'Fetching tags…',
+      );
     });
 
   tags
@@ -38,11 +45,18 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
     .action(async (tagId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.get<Record<string, unknown>>(`/tags/${tagId}`);
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: `Tag: ${tagId}` }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<Record<string, unknown>>(`/tags/${tagId}`)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<Record<string, unknown>>(`/tags/${tagId}`);
+          return React.createElement(DetailView, { data, title: `Tag: ${tagId}` });
+        },
+        'Fetching tag…',
+      );
     });
 
   tags
@@ -61,18 +75,26 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>('/tags', {
-          agentId,
-          name: cmdOpts.name,
-          ...(cmdOpts.description && { description: cmdOpts.description }),
-          ...(cmdOpts.visibility && { visibility: cmdOpts.visibility }),
-          ...(cmdOpts.keywords && { keywords: cmdOpts.keywords }),
-          ...(cmdOpts.welcomeMessage && { welcomeMessage: cmdOpts.welcomeMessage }),
-        });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Tag Created' }));
-      } catch (err) { handleError(err); }
+      const body = {
+        agentId,
+        name: cmdOpts.name,
+        ...(cmdOpts.description && { description: cmdOpts.description }),
+        ...(cmdOpts.visibility && { visibility: cmdOpts.visibility }),
+        ...(cmdOpts.keywords && { keywords: cmdOpts.keywords }),
+        ...(cmdOpts.welcomeMessage && { welcomeMessage: cmdOpts.welcomeMessage }),
+      };
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>('/tags', body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>('/tags', body);
+          return React.createElement(DetailView, { data, title: 'Tag Created' });
+        },
+        'Creating tag…',
+      );
     });
 
   tags
@@ -92,11 +114,18 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
       if (cmdOpts.visibility) body.visibility = cmdOpts.visibility;
       if (cmdOpts.keywords) body.keywords = cmdOpts.keywords;
       if (cmdOpts.welcomeMessage) body.welcomeMessage = cmdOpts.welcomeMessage;
-      try {
-        const data = await client.patch<Record<string, unknown>>(`/tags/${tagId}`, body);
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Tag Updated' }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.patch<Record<string, unknown>>(`/tags/${tagId}`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.patch<Record<string, unknown>>(`/tags/${tagId}`, body);
+          return React.createElement(DetailView, { data, title: 'Tag Updated' });
+        },
+        'Updating tag…',
+      );
     });
 
   tags
@@ -107,25 +136,16 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
       const opts = getGlobalOpts();
       const client = createClient(opts);
 
-      const doDelete = async () => {
-        try {
-          await client.delete<unknown>(`/tags/${tagId}`);
-          if (opts.json) return outputJSON({ deleted: true, tagId });
-          console.log(`✓ Tag ${tagId} deleted.`);
-          process.exit(0);
-        } catch (err) { handleError(err); }
-      };
-
       if (opts.json || cmdOpts.yes) {
-        await doDelete();
+        try { outputJSON(await client.delete<unknown>(`/tags/${tagId}`)); }
+        catch (err) { handleError(err); }
         return;
       }
 
       renderUI(
-        React.createElement(Confirm, {
-          message: `Delete tag ${tagId}?`,
-          onConfirm: () => { doDelete(); },
-          onCancel: () => { console.log('Cancelled.'); process.exit(0); },
+        React.createElement(DeleteFlow, {
+          entityLabel: `tag ${tagId}`,
+          doDelete: () => client.delete<unknown>(`/tags/${tagId}`),
         }),
       );
     });
@@ -137,13 +157,20 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
     .action(async (customerId: string, cmdOpts: { tag: string }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>(`/customers/${customerId}/tags`, {
-          tagId: cmdOpts.tag,
-        });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Tag Assigned' }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>(`/customers/${customerId}/tags`, { tagId: cmdOpts.tag })); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>(`/customers/${customerId}/tags`, {
+            tagId: cmdOpts.tag,
+          });
+          return React.createElement(DetailView, { data, title: 'Tag Assigned' });
+        },
+        'Assigning tag…',
+      );
     });
 
   tags
@@ -152,10 +179,20 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
     .action(async (customerId: string, tagCustomerId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        await client.delete<unknown>(`/customers/${customerId}/tags/${tagCustomerId}`);
-        if (opts.json) return outputJSON({ unassigned: true });
-        console.log(`✓ Tag removed from customer ${customerId}.`);
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try {
+          await client.delete<unknown>(`/customers/${customerId}/tags/${tagCustomerId}`);
+          outputJSON({ unassigned: true });
+        }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          await client.delete<unknown>(`/customers/${customerId}/tags/${tagCustomerId}`);
+          return React.createElement(SuccessBox, { message: `Tag removed from customer ${customerId}.` });
+        },
+        'Removing tag…',
+      );
     });
 }

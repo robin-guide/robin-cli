@@ -2,10 +2,10 @@ import React from 'react';
 import fs from 'fs';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
-import { outputJSON, renderUI } from '../ui/render.js';
+import { outputJSON, renderCommand } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
-import { resolveAgent } from '../utils.js';
+import { resolveAgent, normalizeList } from '../utils.js';
 
 export function registerCustomers(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const customers = program.command('customers').description('Manage customers');
@@ -28,21 +28,28 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>('/customers', {
-          agentId,
-          cursor: cmdOpts.cursor,
-          pageSize: cmdOpts.pageSize,
-          sortBy: cmdOpts.sortBy,
-          sortOrder: cmdOpts.sortOrder,
-          tagId: cmdOpts.tagId,
-          name: cmdOpts.name,
-          phone: cmdOpts.phone,
-        });
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : (data as { customers?: unknown[] }).customers ?? [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      const query = {
+        agentId,
+        cursor: cmdOpts.cursor,
+        pageSize: cmdOpts.pageSize,
+        sortBy: cmdOpts.sortBy,
+        sortOrder: cmdOpts.sortOrder,
+        tagId: cmdOpts.tagId,
+        name: cmdOpts.name,
+        phone: cmdOpts.phone,
+      };
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>('/customers', query)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>('/customers', query);
+          return React.createElement(Table, { data: normalizeList(data, 'customers') });
+        },
+        'Fetching customers…',
+      );
     });
 
   customers
@@ -53,11 +60,18 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      try {
-        const data = await client.get<Record<string, unknown>>(`/customers/${customerId}`, { agentId });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: `Customer: ${customerId}` }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<Record<string, unknown>>(`/customers/${customerId}`, { agentId })); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<Record<string, unknown>>(`/customers/${customerId}`, { agentId });
+          return React.createElement(DetailView, { data, title: `Customer: ${customerId}` });
+        },
+        'Fetching customer…',
+      );
     });
 
   customers
@@ -76,18 +90,26 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>('/customers', {
-          agentId,
-          phone: cmdOpts.phone,
-          name: cmdOpts.name,
-          ...(cmdOpts.optedIn !== undefined && { optedIn: cmdOpts.optedIn }),
-          ...(cmdOpts.notes && { notes: cmdOpts.notes }),
-          ...(cmdOpts.welcomeMessage && { welcomeMessage: cmdOpts.welcomeMessage }),
-        });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Customer Created' }));
-      } catch (err) { handleError(err); }
+      const body = {
+        agentId,
+        phone: cmdOpts.phone,
+        name: cmdOpts.name,
+        ...(cmdOpts.optedIn !== undefined && { optedIn: cmdOpts.optedIn }),
+        ...(cmdOpts.notes && { notes: cmdOpts.notes }),
+        ...(cmdOpts.welcomeMessage && { welcomeMessage: cmdOpts.welcomeMessage }),
+      };
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>('/customers', body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>('/customers', body);
+          return React.createElement(DetailView, { data, title: 'Customer Created' });
+        },
+        'Creating customer…',
+      );
     });
 
   customers
@@ -107,15 +129,21 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       if (cmdOpts.name) body.name = cmdOpts.name;
       if (cmdOpts.notes) body.notes = cmdOpts.notes;
       if (cmdOpts.optedIn !== undefined) body.optedIn = cmdOpts.optedIn === 'true';
-      try {
-        // agentId goes as a query param, not in the PATCH body
-        const data = await client.patch<Record<string, unknown>>(
-          `/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`,
-          body,
-        );
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Customer Updated' }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.patch<Record<string, unknown>>(`/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.patch<Record<string, unknown>>(
+            `/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`,
+            body,
+          );
+          return React.createElement(DetailView, { data, title: 'Customer Updated' });
+        },
+        'Updating customer…',
+      );
     });
 
   customers
@@ -135,16 +163,23 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
         console.error(`Could not read file: ${cmdOpts.file}`);
         process.exit(1);
       }
-      try {
-        const data = await client.post<unknown>('/customers/bulk', {
-          agentId,
-          contacts,
-          ...(cmdOpts.tagIds && { tagIds: cmdOpts.tagIds }),
-        });
-        if (opts.json) return outputJSON(data);
-        const d = data as Record<string, unknown>;
-        renderUI(React.createElement(DetailView, { data: d, title: 'Bulk Import Result' }));
-      } catch (err) { handleError(err); }
+      const body = {
+        agentId,
+        contacts,
+        ...(cmdOpts.tagIds && { tagIds: cmdOpts.tagIds }),
+      };
+      if (opts.json) {
+        try { outputJSON(await client.post<unknown>('/customers/bulk', body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>('/customers/bulk', body);
+          return React.createElement(DetailView, { data, title: 'Bulk Import Result' });
+        },
+        'Importing customers…',
+      );
     });
 
   customers
@@ -155,11 +190,17 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>(`/customers/${customerId}/announcements`, { agentId });
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>(`/customers/${customerId}/announcements`, { agentId })); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>(`/customers/${customerId}/announcements`, { agentId });
+          return React.createElement(Table, { data: normalizeList(data) });
+        },
+        'Fetching customer announcements…',
+      );
     });
 }

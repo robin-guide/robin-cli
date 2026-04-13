@@ -19,3 +19,24 @@ export function resolveAgent(opts: GlobalOpts, cmdOpts: { agent?: string }): str
   }
   return agentId;
 }
+
+/**
+ * Normalize a variety of API response shapes into a flat array of row objects.
+ * Handles: raw arrays, paginated envelopes ({ [key]: T[] }), and scalar objects.
+ */
+export function normalizeList(
+  data: unknown,
+  envelopeKey?: string,
+): Record<string, unknown>[] {
+  if (Array.isArray(data)) return data as Record<string, unknown>[];
+  if (
+    envelopeKey &&
+    typeof data === 'object' &&
+    data !== null &&
+    envelopeKey in data
+  ) {
+    const val = (data as Record<string, unknown>)[envelopeKey];
+    if (Array.isArray(val)) return val as Record<string, unknown>[];
+  }
+  return [data as Record<string, unknown>];
+}

@@ -13,51 +13,74 @@ function formatCell(value: unknown): string {
   return String(value);
 }
 
+function truncate(s: string, width: number): string {
+  if (s.length <= width) return s.padEnd(width);
+  return s.slice(0, width - 1) + '…';
+}
+
 export function Table({ data, columns }: TableProps): React.ReactElement {
   if (data.length === 0) {
     return <Text color="gray">No results.</Text>;
   }
 
+  const terminalWidth = process.stdout.columns ?? 80;
   const cols = columns ?? Object.keys(data[0] ?? {});
 
-  // Calculate column widths: max of header length and cell content length
-  const widths: Record<string, number> = {};
+  // Natural column widths: max of header and cell content, capped at 40
+  const naturalWidths: Record<string, number> = {};
   for (const col of cols) {
-    widths[col] = col.length;
+    naturalWidths[col] = col.length;
     for (const row of data) {
       const len = formatCell(row[col]).length;
-      if (len > widths[col]) widths[col] = len;
+      if (len > naturalWidths[col]) naturalWidths[col] = len;
     }
-    // Cap at 40 chars to avoid runaway columns
-    widths[col] = Math.min(widths[col], 40);
+    naturalWidths[col] = Math.min(naturalWidths[col], 40);
   }
 
-  const pad = (s: string, w: number) => s.slice(0, w).padEnd(w);
+  // Total space needed: sum of column widths + 2-char gap between each column
+  const gapWidth = 2;
+  const totalNatural = cols.reduce((sum, col) => sum + naturalWidths[col], 0)
+    + gapWidth * (cols.length - 1);
+
+  // If content fits, use natural widths; otherwise scale down proportionally
+  const widths: Record<string, number> = {};
+  if (totalNatural <= terminalWidth - 2) {
+    for (const col of cols) widths[col] = naturalWidths[col];
+  } else {
+    const available = Math.max(terminalWidth - 2 - gapWidth * (cols.length - 1), cols.length * 4);
+    const totalNaturalSum = cols.reduce((s, c) => s + naturalWidths[c], 0);
+    for (const col of cols) {
+      widths[col] = Math.max(
+        4,
+        Math.floor((naturalWidths[col] / totalNaturalSum) * available),
+      );
+    }
+  }
 
   return (
     <Box flexDirection="column">
       {/* Header */}
       <Box>
-        {cols.map((col) => (
-          <Box key={col} marginRight={2}>
-            <Text bold color="cyan">{pad(col, widths[col])}</Text>
+        {cols.map((col, i) => (
+          <Box key={col} marginRight={i < cols.length - 1 ? gapWidth : 0}>
+            <Text bold color="cyan">{truncate(col, widths[col])}</Text>
           </Box>
         ))}
       </Box>
       {/* Divider */}
       <Box>
-        {cols.map((col) => (
-          <Box key={col} marginRight={2}>
+        {cols.map((col, i) => (
+          <Box key={col} marginRight={i < cols.length - 1 ? gapWidth : 0}>
             <Text color="gray">{'─'.repeat(widths[col])}</Text>
           </Box>
         ))}
       </Box>
       {/* Rows */}
-      {data.map((row, i) => (
-        <Box key={i}>
-          {cols.map((col) => (
-            <Box key={col} marginRight={2}>
-              <Text>{pad(formatCell(row[col]), widths[col])}</Text>
+      {data.map((row, ri) => (
+        <Box key={ri}>
+          {cols.map((col, i) => (
+            <Box key={col} marginRight={i < cols.length - 1 ? gapWidth : 0}>
+              <Text>{truncate(formatCell(row[col]), widths[col])}</Text>
             </Box>
           ))}
         </Box>

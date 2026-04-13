@@ -11,7 +11,9 @@
     "dev": "ts-node src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "build:link": "npm run build && npm link",
+    "unlink": "npm unlink"
   },
   "dependencies": {
     "commander": "^12.1.0",

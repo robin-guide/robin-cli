@@ -1,9 +1,11 @@
 import React from 'react';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
-import { outputJSON, renderUI } from '../ui/render.js';
+import { outputJSON, renderCommand, renderUI } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
+import { DeleteFlow } from '../components/DeleteFlow.js';
+import { normalizeList } from '../utils.js';
 
 export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const websites = program.command('websites').description('Manage web crawler websites');
@@ -16,15 +18,21 @@ export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOp
     .action(async (agentId: string, cmdOpts: { cursor?: string; limit?: string }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>(`/agents/${agentId}/tools/web-crawler/websites`, {
-          cursor: cmdOpts.cursor,
-          limit: cmdOpts.limit,
-        });
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : (data as { websites?: unknown[] }).websites ?? [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>(`/agents/${agentId}/tools/web-crawler/websites`, { cursor: cmdOpts.cursor, limit: cmdOpts.limit })); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>(`/agents/${agentId}/tools/web-crawler/websites`, {
+            cursor: cmdOpts.cursor,
+            limit: cmdOpts.limit,
+          });
+          return React.createElement(Table, { data: normalizeList(data, 'websites') });
+        },
+        'Fetching websites…',
+      );
     });
 
   websites
@@ -35,14 +43,22 @@ export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOp
     .action(async (agentId: string, cmdOpts: { url: string; description: string }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>(
-          `/agents/${agentId}/tools/web-crawler/websites`,
-          { url: cmdOpts.url, description: cmdOpts.description },
-        );
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Website Added' }));
-      } catch (err) { handleError(err); }
+      const body = { url: cmdOpts.url, description: cmdOpts.description };
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>(`/agents/${agentId}/tools/web-crawler/websites`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>(
+            `/agents/${agentId}/tools/web-crawler/websites`,
+            body,
+          );
+          return React.createElement(DetailView, { data, title: 'Website Added' });
+        },
+        'Adding website…',
+      );
     });
 
   websites
@@ -56,27 +72,46 @@ export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOp
       const body: Record<string, unknown> = {};
       if (cmdOpts.url) body.url = cmdOpts.url;
       if (cmdOpts.description) body.description = cmdOpts.description;
-      try {
-        const data = await client.patch<Record<string, unknown>>(
-          `/agents/${agentId}/tools/web-crawler/websites/${websiteId}`,
-          body,
-        );
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Website Updated' }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.patch<Record<string, unknown>>(`/agents/${agentId}/tools/web-crawler/websites/${websiteId}`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.patch<Record<string, unknown>>(
+            `/agents/${agentId}/tools/web-crawler/websites/${websiteId}`,
+            body,
+          );
+          return React.createElement(DetailView, { data, title: 'Website Updated' });
+        },
+        'Updating website…',
+      );
     });
 
   websites
     .command('remove <agentId> <websiteId>')
     .description('Remove a website')
-    .action(async (agentId: string, websiteId: string) => {
+    .option('--yes', 'Skip confirmation prompt')
+    .action(async (agentId: string, websiteId: string, cmdOpts: { yes?: boolean }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        await client.delete<unknown>(`/agents/${agentId}/tools/web-crawler/websites/${websiteId}`);
-        if (opts.json) return outputJSON({ removed: true, websiteId });
-        console.log(`✓ Website ${websiteId} removed.`);
-      } catch (err) { handleError(err); }
+
+      if (opts.json || cmdOpts.yes) {
+        try {
+          await client.delete<unknown>(`/agents/${agentId}/tools/web-crawler/websites/${websiteId}`);
+          outputJSON({ removed: true, websiteId });
+        }
+        catch (err) { handleError(err); }
+        return;
+      }
+
+      renderUI(
+        React.createElement(DeleteFlow, {
+          entityLabel: `website ${websiteId}`,
+          doDelete: () => client.delete<unknown>(`/agents/${agentId}/tools/web-crawler/websites/${websiteId}`),
+        }),
+      );
     });
 
   websites
@@ -94,13 +129,23 @@ export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOp
       }
       const body: Record<string, unknown> = { enabled: !!cmdOpts.enable };
       if (cmdOpts.systemInstructions) body.systemInstructions = cmdOpts.systemInstructions;
-      try {
-        const data = await client.post<Record<string, unknown>>(
-          `/agents/${agentId}/tools/web-crawler`,
-          body,
-        );
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: `Web Crawler ${cmdOpts.enable ? 'Enabled' : 'Disabled'}` }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>(`/agents/${agentId}/tools/web-crawler`, body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>(
+            `/agents/${agentId}/tools/web-crawler`,
+            body,
+          );
+          return React.createElement(DetailView, {
+            data,
+            title: `Web Crawler ${cmdOpts.enable ? 'Enabled' : 'Disabled'}`,
+          });
+        },
+        cmdOpts.enable ? 'Enabling web crawler…' : 'Disabling web crawler…',
+      );
     });
 }

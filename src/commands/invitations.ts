@@ -1,10 +1,12 @@
 import React from 'react';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
-import { outputJSON, renderUI } from '../ui/render.js';
+import { outputJSON, renderCommand } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
+import { SuccessBox } from '../components/SuccessBox.js';
 import { readConfig } from '../config.js';
+import { normalizeList } from '../utils.js';
 
 export function registerInvitations(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const invitations = program.command('invitations').description('Manage team invitations');
@@ -15,12 +17,18 @@ export function registerInvitations(program: Command, getGlobalOpts: () => Globa
     .action(async () => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.get<unknown>('/invitations');
-        if (opts.json) return outputJSON(data);
-        const items = Array.isArray(data) ? data : (data as { invitations?: unknown[] }).invitations ?? [data];
-        renderUI(React.createElement(Table, { data: items as Record<string, unknown>[] }));
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.get<unknown>('/invitations')); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.get<unknown>('/invitations');
+          return React.createElement(Table, { data: normalizeList(data, 'invitations') });
+        },
+        'Fetching invitations…',
+      );
     });
 
   invitations
@@ -38,15 +46,19 @@ export function registerInvitations(program: Command, getGlobalOpts: () => Globa
         process.exit(1);
       }
       const client = createClient(opts);
-      try {
-        const data = await client.post<Record<string, unknown>>('/invitations', {
-          teamId,
-          phone: cmdOpts.phone,
-          name: cmdOpts.name,
-        });
-        if (opts.json) return outputJSON(data);
-        renderUI(React.createElement(DetailView, { data, title: 'Invitation Created' }));
-      } catch (err) { handleError(err); }
+      const body = { teamId, phone: cmdOpts.phone, name: cmdOpts.name };
+      if (opts.json) {
+        try { outputJSON(await client.post<Record<string, unknown>>('/invitations', body)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          const data = await client.post<Record<string, unknown>>('/invitations', body);
+          return React.createElement(DetailView, { data, title: 'Invitation Created' });
+        },
+        'Creating invitation…',
+      );
     });
 
   invitations
@@ -55,10 +67,17 @@ export function registerInvitations(program: Command, getGlobalOpts: () => Globa
     .action(async (invitationId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
-      try {
-        const data = await client.post<unknown>(`/invitations/revoke/${invitationId}`);
-        if (opts.json) return outputJSON(data);
-        console.log(`✓ Invitation ${invitationId} revoked.`);
-      } catch (err) { handleError(err); }
+      if (opts.json) {
+        try { outputJSON(await client.post<unknown>(`/invitations/revoke/${invitationId}`)); }
+        catch (err) { handleError(err); }
+        return;
+      }
+      renderCommand(
+        async () => {
+          await client.post<unknown>(`/invitations/revoke/${invitationId}`);
+          return React.createElement(SuccessBox, { message: `Invitation ${invitationId} revoked.` });
+        },
+        'Revoking invitation…',
+      );
     });
 }
