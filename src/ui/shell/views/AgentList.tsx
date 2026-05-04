@@ -42,6 +42,7 @@ export function AgentList({ client, onNavigate, onBack, nextView }: AgentListPro
               ? { type: 'customers', agentId: id, agentName: name }
               : { type: 'agent-detail', agentId: id, agentName: name };
           return {
+            id,
             label: name,
             value: route,
             hint: a.status,

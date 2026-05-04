@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './proxy.js';
 import { Command } from 'commander';
 import { registerAuth } from './commands/auth.js';
 import { registerAgents } from './commands/agents.js';

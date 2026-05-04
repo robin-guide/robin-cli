@@ -111,6 +111,7 @@ function CustomerListPage({
   const items: SelectItem<Route>[] = customers.map(c => {
     const id = c.id ?? c.externalId ?? '';
     return {
+      id,
       label: c.name ?? id,
       value: { type: 'customer-detail', customerId: id, customerName: c.name, agentId } as Route,
       hint: c.phone ?? c.phoneNumber ?? undefined,

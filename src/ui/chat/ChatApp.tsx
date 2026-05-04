@@ -103,7 +103,7 @@ function AgentPicker({ client, onSelect, onCancel }: AgentPickerProps): React.Re
         const items: SelectItem<{ id: string; name: string }>[] = agents.map(a => {
           const id = a.id ?? a.externalId ?? '';
           const name = a.name ?? id;
-          return { label: name, value: { id, name }, hint: a.status };
+          return { id, label: name, value: { id, name }, hint: a.status };
         });
 
         return (

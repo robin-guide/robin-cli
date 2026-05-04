@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { useExitConfirmation } from '../../components/ExitConfirmation.js';
 
 export interface SelectItem<V = string> {
+  id?: string;
   label: string;
   value: V;
   description?: string;
@@ -70,7 +71,7 @@ export function SelectList<V>({
         const index = offset + i;
         const isSelected = index === cursor;
         return (
-          <Box key={item.label}>
+          <Box key={item.id ?? `${item.label}:${index}`}>
             <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
               {isSelected ? '▶ ' : '  '}
             </Text>
