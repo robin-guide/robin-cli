@@ -511,3 +511,41 @@ robin invitations create --team team_xyz --phone "+15551234567" --name "Jane Doe
 ```bash
 robin invitations revoke inv_abc123
 ```
+
+---
+
+## chat
+
+**Required permission:** `threads.write` (sends messages via the web channel)
+
+Open a full-screen interactive chat window connected to the APP_ROBIN web channel for an agent. Messages are visible in the Robin web app's Test Chat view for the same agent.
+
+### `robin chat [agentId]`
+
+**API (load):** `GET /channels/web/messages/:agentId`
+**API (send):** `POST /channels/web/messages/:agentId`
+**API (reset):** `POST /channels/web/messages/:agentId/reset`
+
+```bash
+# Use the configured default agent
+robin chat
+
+# Specify agent explicitly
+robin chat agent_abc123
+
+# Override API key for this session
+robin chat agent_abc123 --api-key <key>
+```
+
+**Arguments:** `agentId` (optional — falls back to `--agent` flag or `default-agent` config; shows a picker if none is set)
+
+**Flags:** `--api-key <key>`, `--base-url <url>`
+
+**In-chat controls:**
+
+| Input | Action |
+|-------|--------|
+| Type + `Enter` | Send message to agent |
+| `Esc` | Exit chat |
+| `/reset` | Clear the web-channel thread history |
+| `/quit` | Exit immediately |

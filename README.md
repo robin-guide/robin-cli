@@ -1,38 +1,13 @@
 # Robin CLI
-```bash
-            +nLpOQdX                          qFut@wcz|@t
-          lp@@@@DRmYk@@pc>                      F@zLc^ !rB@
-     |@@@@DDBqOOmO00YtUB@@@@+                  p@zcZ|>XvR@
-    Y@zl!~=   :!nYL0QXn!~~ld@v                c@Jzct!vn#@
-    J@n=              ~!<   U@               ihmLzfjun@d
-     v@l)hd&@@rLB@@@@@bYrJu  O@              pwCjrJjr@U
-   =  +@@x  :h@@@RRp;     ;<  u@            ZddXjztj@r
- @@@@@@#@! +t 0@   r;)nLLOQwdw> LC   ;     OppzfJtr@x
-i@(rl(z  q, x(@@jUzYLQLvJpwmOmdOcwm@@l    Xdhv|)t(@n
- J@@QtrzzJhh0ZU(LOLJuY0LZLnzUYQQ0JU#c    cdC)v<FkDz
-   cF@R0@Gd0z>trt)lxvzCYULQJJLOCLLYYBGd<)qciY(X@@t
-        @mOOOOcfvcuOZbQLQQQQJcYJCCCL0ZkZlr0@btm@c
-        @OLXrvY0OJQwcJQQJYYzXzvcuYXYJL>,rd@GpL@d
-       (@UzrzcvfjvxnxxXJnvXvuf)rYLGRLn c@@@dqB@bq
-       FBD((xtl(tflfnrxzncJLmwvjvJLLurrb@@#F#@@@|
-       @bkzvYLnccvcYYLQzvczQZppLt|jjx|zbpGG@@#@@
-       @mbqnrvrrrmkRmUczLJzuvvLdQ(+~~<)= :nuqh@@(
-       @@b0J> urQO, ;)junxXzYntjY0X!   +LcYB&&@@w:
-        @@O@GXfnf++vx)<itvXzzYzcflt<== c@@@@hFu OGv
-        =@@qbqXzcz>,l)((|)frnnnnxvcXrnwcftxLCr   x#O
-         ^@@kR#DGFGdJUnnnnrnnfnxjtvnjk@@@qR@@@Cq<  O|
-           @@@RZh0LZR@FJflxzXvrjnrzX!Y@@#G@@@   vhL;n~
-            )@@@@DhmQLdRDw0CYLZJx>;^>,^rQ@Bn      <ffY+
-              !@@@@@@DdR#RFk0JvO&@@RCjrlt@           lpX
-                 )@@@@@@@O@@@@@@@@@@@@v+iUx            +
-                     : d@kwq&hX|)+  px
-                       k            h
-                     O@            ;@
-                    &D             ZQ
-                  ,&n              Y>
-           +QJ),:QCv     ; um@DRLZL(r |
-          =uZmdbFkpG@##bJuJZJOqpR@@@@F@m(li<^
-```
+
+```text
+  ██████╗  ██████╗ ██████╗ ██╗███╗  ██╗ ██╗
+  ██╔══██╗██╔═══██╗██╔══██╗██║████╗ ██║ ██║
+  ██████╔╝██║   ██║██████╔╝██║██╔██╗██║ ██║
+  ██╔══██╗██║   ██║██╔══██╗██║██║╚████║ ╚═╝
+  ██║  ██║╚██████╔╝██████╔╝██║██║ ╚███║ ██╗
+  ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚═╝  ╚══╝ ╚═╝
+  ```
 
 Scriptable command-line access to the [Robin](https://robin.guide) platform. Built for humans and AI agents alike.
 
@@ -70,6 +45,61 @@ robin ui
 ```
 
 Navigate with arrow keys, select with Enter, and go back with `q` or Escape.
+
+## Chat Mode
+
+Open a full-screen chat window with a Robin agent over the same web channel used by the Robin web app:
+
+```bash
+# Use the default agent (set via `robin config set default-agent <id>`)
+robin chat
+
+# Or specify an agent directly
+robin chat <agentId>
+
+# Override the API key or base URL for this session
+robin chat <agentId> --api-key <key>
+```
+
+Controls inside the chat window:
+
+| Input | Action |
+|-------|--------|
+| Type + `Enter` | Send message |
+| `Esc` | Exit chat |
+| `/reset` | Clear conversation history on the web channel |
+| `/quit` | Exit immediately |
+
+Messages sent here are the same ones visible in the Robin web app's "Test Chat" view for that agent. If no agent is provided and no default is configured, a picker is shown first.
+
+## Local Development
+
+Install dependencies once:
+
+```bash
+npm install
+```
+
+For quick checks while editing:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+To test the local CLI globally, build and link it:
+
+```bash
+npm run build:link
+robin --help
+robin ui
+```
+
+After linking, `robin` points at your local checkout. Re-run `npm run build` after code changes so `dist/` is updated before testing. To remove the local link:
+
+```bash
+npm run unlink
+```
 
 ## Why
 
@@ -131,3 +161,38 @@ robin websites remove <agentId> <websiteId> --yes
 ## License
 
 MIT
+
+```
+            +nLpOQdX                          qFut@wcz|@t
+          lp@@@@DRmYk@@pc>                      F@zLc^ !rB@
+     |@@@@DDBqOOmO00YtUB@@@@+                  p@zcZ|>XvR@
+    Y@zl!~=   :!nYL0QXn!~~ld@v                c@Jzct!vn#@
+    J@n=              ~!<   U@               ihmLzfjun@d
+     v@l)hd&@@rLB@@@@@bYrJu  O@              pwCjrJjr@U
+   =  +@@x  :h@@@RRp;     ;<  u@            ZddXjztj@r
+ @@@@@@#@! +t 0@   r;)nLLOQwdw> LC   ;     OppzfJtr@x
+i@(rl(z  q, x(@@jUzYLQLvJpwmOmdOcwm@@l    Xdhv|)t(@n
+ J@@QtrzzJhh0ZU(LOLJuY0LZLnzUYQQ0JU#c    cdC)v<FkDz
+   cF@R0@Gd0z>trt)lxvzCYULQJJLOCLLYYBGd<)qciY(X@@t
+        @mOOOOcfvcuOZbQLQQQQJcYJCCCL0ZkZlr0@btm@c
+        @OLXrvY0OJQwcJQQJYYzXzvcuYXYJL>,rd@GpL@d
+       (@UzrzcvfjvxnxxXJnvXvuf)rYLGRLn c@@@dqB@bq
+       FBD((xtl(tflfnrxzncJLmwvjvJLLurrb@@#F#@@@|
+       @bkzvYLnccvcYYLQzvczQZppLt|jjx|zbpGG@@#@@
+       @mbqnrvrrrmkRmUczLJzuvvLdQ(+~~<)= :nuqh@@(
+       @@b0J> urQO, ;)junxXzYntjY0X!   +LcYB&&@@w:
+        @@O@GXfnf++vx)<itvXzzYzcflt<== c@@@@hFu OGv
+        =@@qbqXzcz>,l)((|)frnnnnxvcXrnwcftxLCr   x#O
+         ^@@kR#DGFGdJUnnnnrnnfnxjtvnjk@@@qR@@@Cq<  O|
+           @@@RZh0LZR@FJflxzXvrjnrzX!Y@@#G@@@   vhL;n~
+            )@@@@DhmQLdRDw0CYLZJx>;^>,^rQ@Bn      <ffY+
+              !@@@@@@DdR#RFk0JvO&@@RCjrlt@           lpX
+                 )@@@@@@@O@@@@@@@@@@@@v+iUx            +
+                     : d@kwq&hX|)+  px
+                       k            h
+                     O@            ;@
+                    &D             ZQ
+                  ,&n              Y>
+           +QJ),:QCv     ; um@DRLZL(r |
+          =uZmdbFkpG@##bJuJZJOqpR@@@@F@m(li<^
+```

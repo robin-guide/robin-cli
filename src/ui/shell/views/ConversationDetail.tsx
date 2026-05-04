@@ -6,6 +6,7 @@ import { HelpBar } from '../components/HelpBar.js';
 import { Spinner } from '../../../components/Spinner.js';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { SuccessBox } from '../../../components/SuccessBox.js';
+import { useExitConfirmation } from '../../components/ExitConfirmation.js';
 import { formatError, type RobinClient } from '../../../client.js';
 
 interface Message {
@@ -22,6 +23,17 @@ interface ThreadData {
   agentPaused?: boolean;
   customerName?: string;
   messages?: Message[];
+}
+
+interface ThreadResponse {
+  thread?: {
+    id?: string;
+    agentPaused?: boolean;
+    customer?: {
+      name?: string | null;
+    };
+    messages?: Message[];
+  };
 }
 
 type ActionState =
@@ -46,13 +58,13 @@ export function ConversationDetail({
 }: ConversationDetailProps): React.ReactElement {
   return (
     <AsyncView
-      work={() => client.get<ThreadData>(`/threads/${threadId}`)}
+      work={() => client.get<ThreadResponse>(`/threads/${threadId}`)}
       loadingMessage="Fetching conversation…"
       onBack={onBack}
     >
-      {(thread) => (
+      {(data) => (
         <ConversationView
-          thread={thread}
+          thread={normalizeThreadData(data, threadId)}
           threadId={threadId}
           agentName={agentName}
           client={client}
@@ -61,6 +73,19 @@ export function ConversationDetail({
       )}
     </AsyncView>
   );
+}
+
+function normalizeThreadData(data: ThreadResponse & ThreadData, threadId: string): ThreadData {
+  if (data.thread) {
+    return {
+      id: data.thread.id ?? threadId,
+      agentPaused: data.thread.agentPaused,
+      customerName: data.thread.customer?.name ?? undefined,
+      messages: data.thread.messages ?? [],
+    };
+  }
+
+  return data;
 }
 
 interface ConversationViewProps {
@@ -74,6 +99,7 @@ interface ConversationViewProps {
 function ConversationView({ thread, threadId, agentName, client, onBack }: ConversationViewProps): React.ReactElement {
   const [actionState, setActionState] = useState<ActionState>({ type: 'idle' });
   const [isPaused, setIsPaused] = useState(!!thread.agentPaused);
+  const { isConfirmingExit } = useExitConfirmation();
 
   const runAction = async (label: string, work: () => Promise<unknown>, successMsg: string) => {
     setActionState({ type: 'working', label });
@@ -102,7 +128,7 @@ function ConversationView({ thread, threadId, agentName, client, onBack }: Conve
         willPause ? 'AI paused for this conversation.' : 'AI resumed for this conversation.',
       );
     }
-  });
+  }, { isActive: !isConfirmingExit });
 
   const messages = thread.messages ?? [];
   const title = thread.customerName ?? threadId;

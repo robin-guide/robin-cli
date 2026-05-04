@@ -6,6 +6,15 @@ import { DetailView } from '../components/DetailView.js';
 import { Table } from '../components/Table.js';
 import { normalizeList } from '../utils.js';
 
+function getThreadMessages(data: Record<string, unknown>): unknown[] {
+  const nestedThread = data.thread;
+  if (nestedThread && typeof nestedThread === 'object' && 'messages' in nestedThread) {
+    return ((nestedThread as Record<string, unknown>).messages as unknown[] | undefined) ?? [];
+  }
+
+  return (data.messages as unknown[] | undefined) ?? [];
+}
+
 export function registerConversations(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const conversations = program.command('conversations').description('Manage conversations / threads');
 
@@ -23,7 +32,7 @@ export function registerConversations(program: Command, getGlobalOpts: () => Glo
       renderCommand(
         async () => {
           const data = await client.get<Record<string, unknown>>(`/threads/${threadId}`);
-          const msgs = (data.messages as unknown[] | undefined) ?? [];
+          const msgs = getThreadMessages(data);
           if (msgs.length > 0) {
             return React.createElement(Table, { data: normalizeList(msgs) });
           }

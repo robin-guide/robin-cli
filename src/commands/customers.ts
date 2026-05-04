@@ -1,4 +1,5 @@
 import React from 'react';
+import { Box, Text } from 'ink';
 import fs from 'fs';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
@@ -6,6 +7,33 @@ import { outputJSON, renderCommand } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
 import { resolveAgent, normalizeList } from '../utils.js';
+
+function paginatedTable(
+  data: unknown,
+  envelopeKey: string,
+  nextCursorFlag: string,
+): React.ReactElement {
+  const rows = normalizeList(data, envelopeKey);
+  const envelope = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+  const hasMore = envelope.hasMore === true;
+  const nextCursor = envelope.nextCursor ?? envelope.cursor;
+
+  const children: React.ReactElement[] = [
+    React.createElement(Table, { data: rows, key: 'table' }),
+  ];
+
+  if (hasMore && nextCursor) {
+    children.push(
+      React.createElement(
+        Text,
+        { dimColor: true, key: 'pagination' },
+        `Showing ${rows.length} results. More available; rerun with ${nextCursorFlag} ${String(nextCursor)}.`,
+      ),
+    );
+  }
+
+  return React.createElement(Box, { flexDirection: 'column' }, children);
+}
 
 export function registerCustomers(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const customers = program.command('customers').description('Manage customers');
@@ -46,7 +74,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       renderCommand(
         async () => {
           const data = await client.get<unknown>('/customers', query);
-          return React.createElement(Table, { data: normalizeList(data, 'customers') });
+          return paginatedTable(data, 'customers', '--cursor');
         },
         'Fetching customers…',
       );

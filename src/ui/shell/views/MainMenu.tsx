@@ -27,11 +27,23 @@ const MENU_ITEMS: SelectItem<Route>[] = [
   },
 ];
 
+const ROBIN_BANNER = [
+  '  ██████╗  ██████╗ ██████╗ ██╗███╗  ██╗ ██╗',
+  '  ██╔══██╗██╔═══██╗██╔══██╗██║████╗ ██║ ██║',
+  '  ██████╔╝██║   ██║██████╔╝██║██╔██╗██║ ██║',
+  '  ██╔══██╗██║   ██║██╔══██╗██║██║╚████║ ╚═╝',
+  '  ██║  ██║╚██████╔╝██████╔╝██║██║ ╚███║ ██╗',
+  '  ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚═╝  ╚══╝ ╚═╝',
+].join('\n');
+
 export function MainMenu({ onNavigate }: MainMenuProps): React.ReactElement {
   const { exit } = useApp();
 
   return (
     <Box flexDirection="column">
+      <Box marginBottom={1}>
+        <Text color="cyan">{ROBIN_BANNER}</Text>
+      </Box>
       <Header title="Robin" subtitle="interactive mode" />
       <SelectList
         items={MENU_ITEMS}

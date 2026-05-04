@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { useExitConfirmation } from '../../components/ExitConfirmation.js';
 
 export interface SelectItem<V = string> {
   label: string;
@@ -26,9 +27,11 @@ export function SelectList<V>({
 }: SelectListProps<V>): React.ReactElement {
   const [cursor, setCursor] = useState(0);
   const [offset, setOffset] = useState(0);
+  const { isConfirmingExit } = useExitConfirmation();
+  const isActive = isFocused && !isConfirmingExit;
 
   useInput((input, key) => {
-    if (!isFocused) return;
+    if (!isActive) return;
 
     if (key.upArrow) {
       const next = Math.max(0, cursor - 1);
@@ -49,7 +52,7 @@ export function SelectList<V>({
     if (key.escape || input === 'q') {
       onCancel();
     }
-  }, { isActive: isFocused });
+  }, { isActive });
 
   if (items.length === 0) {
     return <Text dimColor>No items.</Text>;

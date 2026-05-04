@@ -4,6 +4,7 @@ import { Spinner } from '../../../components/Spinner.js';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { formatError } from '../../../client.js';
 import { HelpBar } from './HelpBar.js';
+import { useExitConfirmation } from '../../components/ExitConfirmation.js';
 
 interface AsyncViewProps<T> {
   work: () => Promise<T>;
@@ -63,9 +64,11 @@ function ErrorView({
   detail?: string;
   onBack: () => void;
 }): React.ReactElement {
+  const { isConfirmingExit } = useExitConfirmation();
+
   useInput((input, key) => {
     if (key.escape || input === 'q') onBack();
-  });
+  }, { isActive: !isConfirmingExit });
 
   return (
     <>

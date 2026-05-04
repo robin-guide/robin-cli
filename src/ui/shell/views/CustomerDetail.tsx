@@ -4,6 +4,7 @@ import { Header } from '../components/Header.js';
 import { AsyncView } from '../components/AsyncView.js';
 import { HelpBar } from '../components/HelpBar.js';
 import { DetailView } from '../../../components/DetailView.js';
+import { useExitConfirmation } from '../../components/ExitConfirmation.js';
 import type { RobinClient } from '../../../client.js';
 
 interface CustomerDetailProps {
@@ -23,9 +24,11 @@ function CustomerDetailView({
   title: string;
   onBack: () => void;
 }): React.ReactElement {
+  const { isConfirmingExit } = useExitConfirmation();
+
   useInput((input, key) => {
     if (key.escape || input === 'q') onBack();
-  });
+  }, { isActive: !isConfirmingExit });
 
   return (
     <Box flexDirection="column">

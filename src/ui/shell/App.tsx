@@ -8,6 +8,7 @@ import { ConversationList } from './views/ConversationList.js';
 import { ConversationDetail } from './views/ConversationDetail.js';
 import { CustomerList } from './views/CustomerList.js';
 import { CustomerDetail } from './views/CustomerDetail.js';
+import { ExitConfirmation } from '../components/ExitConfirmation.js';
 
 /** All possible routes in the interactive shell. */
 export type Route =
@@ -47,21 +48,25 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
     });
   };
 
+  let view: React.ReactElement;
+
   switch (current.type) {
     case 'menu':
-      return <MainMenu onNavigate={push} />;
+      view = <MainMenu onNavigate={push} />;
+      break;
 
     case 'agents':
-      return (
+      view = (
         <AgentList
           client={client}
           onNavigate={push}
           onBack={pop}
         />
       );
+      break;
 
     case 'agent-picker':
-      return (
+      view = (
         <AgentList
           client={client}
           onNavigate={push}
@@ -69,9 +74,10 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
           nextView={current.next}
         />
       );
+      break;
 
     case 'agent-detail':
-      return (
+      view = (
         <AgentDetail
           agentId={current.agentId}
           agentName={current.agentName}
@@ -80,9 +86,10 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
           onBack={pop}
         />
       );
+      break;
 
     case 'conversations':
-      return (
+      view = (
         <ConversationList
           agentId={current.agentId}
           agentName={current.agentName}
@@ -91,9 +98,10 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
           onBack={pop}
         />
       );
+      break;
 
     case 'conversation-detail':
-      return (
+      view = (
         <ConversationDetail
           threadId={current.threadId}
           agentId={current.agentId}
@@ -102,9 +110,10 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
           onBack={pop}
         />
       );
+      break;
 
     case 'customers':
-      return (
+      view = (
         <CustomerList
           agentId={current.agentId}
           agentName={current.agentName}
@@ -113,9 +122,10 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
           onBack={pop}
         />
       );
+      break;
 
     case 'customer-detail':
-      return (
+      view = (
         <CustomerDetail
           customerId={current.customerId}
           customerName={current.customerName}
@@ -124,6 +134,7 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
           onBack={pop}
         />
       );
+      break;
 
     default: {
       // Type-safe exhaustive check
@@ -131,4 +142,6 @@ export function App({ apiKey, baseUrl }: AppProps): React.ReactElement {
       return _exhaustive;
     }
   }
+
+  return <ExitConfirmation>{view}</ExitConfirmation>;
 }

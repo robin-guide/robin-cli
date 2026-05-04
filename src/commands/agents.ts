@@ -1,10 +1,38 @@
 import React from 'react';
+import { Box, Text } from 'ink';
 import { Command } from 'commander';
 import { createClient, handleError, GlobalOpts } from '../client.js';
 import { outputJSON, renderCommand } from '../ui/render.js';
 import { Table } from '../components/Table.js';
 import { DetailView } from '../components/DetailView.js';
 import { normalizeList } from '../utils.js';
+
+function paginatedTable(
+  data: unknown,
+  envelopeKey: string,
+  nextCursorFlag: string,
+): React.ReactElement {
+  const rows = normalizeList(data, envelopeKey);
+  const envelope = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+  const hasMore = envelope.hasMore === true;
+  const nextCursor = envelope.nextCursor ?? envelope.cursor;
+
+  const children: React.ReactElement[] = [
+    React.createElement(Table, { data: rows, key: 'table' }),
+  ];
+
+  if (hasMore && nextCursor) {
+    children.push(
+      React.createElement(
+        Text,
+        { dimColor: true, key: 'pagination' },
+        `Showing ${rows.length} results. More available; rerun with ${nextCursorFlag} ${String(nextCursor)}.`,
+      ),
+    );
+  }
+
+  return React.createElement(Box, { flexDirection: 'column' }, children);
+}
 
 export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts): void {
   const agents = program.command('agents').description('Manage Robin agents');
@@ -150,7 +178,7 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
             cursor: cmdOpts.cursor,
             pageSize: cmdOpts.pageSize,
           });
-          return React.createElement(Table, { data: normalizeList(data, 'threads') });
+          return paginatedTable(data, 'threads', '--cursor');
         },
         'Fetching threads…',
       );

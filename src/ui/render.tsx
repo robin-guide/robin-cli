@@ -8,7 +8,7 @@ export function outputJSON(data: unknown): void {
 }
 
 export function renderUI(component: React.ReactElement): void {
-  const { waitUntilExit } = inkRender(component);
+  const { waitUntilExit } = inkRender(component, { exitOnCtrlC: false });
   waitUntilExit().then(() => process.exit(0)).catch(() => process.exit(1));
 }
 
