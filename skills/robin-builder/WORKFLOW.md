@@ -1,6 +1,6 @@
 # Robin Builder — Workflow
 
-Build or tune a Robin agent: discover the use case, configure via CLI, flag dashboard steps, deliver a QA plan.
+Build or tune a Robin agent: discover the use case, configure via CLI, flag dashboard steps.
 
 ---
 
@@ -39,34 +39,26 @@ robin agents update "$AGENT_ID" \
   --commit-message "Set timezone"
 ```
 
-### 2. Websites vs knowledge base — pick one lane
-
-`userInstructions` (custom knowledge base) and website knowledge sources conflict when both are active: Robin will answer from the knowledge base and skip fetching URLs entirely.
-
-- **Live or frequently-changing data** (schedules, prices, hours, vendor lists) → **websites only**
-- **Static known content** → **knowledge base only** (via `--user-instructions`)
-- **Need both?** Embed stable facts directly in URL description fields — the description acts as a lightweight knowledge layer.
-
-### 3. URL descriptions must be query-shaped
+### 2. URL descriptions must be query-shaped
 
 Vague descriptions cause Robin to fetch the wrong page. Each URL description must answer: *"Use this when someone asks about X."*
 
 ❌ `"Event schedule page"`
 ✅ `"Use this page when a contact asks about the event schedule, set times, or stage lineup. Contains: artist names, set times, stage assignments. Do not use for parking or venue policies."`
 
-Every description needs: trigger phrases, what data is on the page, what not to use it for.
+Every description needs: trigger phrases, what data is on the page, what not to use it for. See Phase 3.3 for the full description format.
 
-### 4. Keep URLs focused — quality over quantity
+### 3. Keep URLs focused — quality over quantity
 
 Robin has a limited number of tool calls per reply. With too many URLs, it burns calls on context retrieval and often never reaches the right page.
 
 Aim for 10–12 URLs maximum. If two URLs cover the same topic, use the better one. Prefer pages that return clean HTML; JavaScript-rendered pages (SPAs, accordions) often return nothing to the scraper.
 
-### 5. JS-rendered content is invisible to the scraper
+### 4. JS-rendered content is invisible to the scraper
 
 Modern venue FAQ pages (accordion UIs, single-page apps) often return no useful text when scraped. For critical facts on these pages — bag policy, accessibility, parking, door times, food rules — extract them manually and embed them directly in the relevant URL's description field or in `userInstructions`.
 
-### 6. Force Robin to fetch before answering
+### 5. Force Robin to fetch before answering
 
 When websites are enabled, include this in `userInstructions` or website instructions:
 
@@ -74,7 +66,7 @@ When websites are enabled, include this in `userInstructions` or website instruc
 
 Without this, Robin may answer from its training data instead of fetching live content.
 
-### 7. Embed critical facts in URL descriptions
+### 6. Embed critical facts in URL descriptions
 
 If a fact is critical and may not reliably surface from the scraped page, hardcode it directly in that URL's description:
 
@@ -83,24 +75,28 @@ If a fact is critical and may not reliably surface from the scraped page, hardco
 venue policies, entry requirements, or door times."
 ```
 
-### 8. Personality defaults for events and venues
+### 7. Personality defaults for events and venues
 
 For events, live venues, and sports — don't leave personality at the default. Casual + Concise is almost always right for "what time does the show start?" conversations. Formal/verbose is wrong here.
 
 Set in the Robin dashboard → Robin settings → Personality sliders.
 Suggested starting point: **Casual 60–70%, Concise 60–70%.**
 
-### 9. QA in short threads
-
-Robin's reply quality degrades in long threads. Real contacts send 2–5 messages. Test the same way: 5–7 questions per thread, then start a new conversation. A 30-question single-thread test is not realistic and doesn't reflect production conditions.
-
 ---
 
 ## Phase 3: Configure via CLI
 
-### 3.1 Knowledge base (`userInstructions`)
+### Knowledge architecture
 
-The knowledge base is what the Robin *knows* — stable facts, product info, policies, grounding context. Use when content is static and doesn't need live fetching.
+Robin has three layers of knowledge. Use the right layer for the right content:
+
+| Layer | Field / Mechanism | Best for |
+|-------|-------------------|----------|
+| Grounding facts | `userInstructions` | Static facts, product info, policies, integration usage rules |
+| Behavioral identity | `goalInstructions` | Goals, tone, persona, rules of engagement |
+| Live web content | Website sources | Schedules, prices, hours, FAQs — anything that changes |
+
+### 3.1 Knowledge base (`userInstructions`)
 
 ```bash
 robin agents update "$AGENT_ID" \
@@ -113,16 +109,14 @@ EOF
 
 **What belongs here:**
 - Hard facts the Robin should always know (hours, address, key policies)
-- Content from JS-rendered pages that the scraper can't reach
+- Content from JS-rendered pages the scraper can't reach
 - Instructions for using connected integrations (e.g. "When the contact checks in, query the Vendors database and read the Perks, Description, and Badge fields for that row")
 
 **What doesn't belong here:**
-- Live-changing data (use websites instead)
-- Persona and tone (use `goalInstructions`)
+- Live-changing data → use website sources instead
+- Persona and tone → use `goalInstructions`
 
 ### 3.2 Goals and persona (`goalInstructions`)
-
-This is who the Robin *is* — role, tone, rules of engagement, what to do and not do.
 
 ```bash
 robin agents update "$AGENT_ID" \
@@ -156,7 +150,7 @@ robin websites configure "$AGENT_ID" --enabled true
 # Add a URL
 robin websites add "$AGENT_ID" \
   --url "https://example.com/schedule" \
-  --description "Use this page when a contact asks about the event schedule, set times, or stage lineup. Contains: artist names, set times, stage assignments. Do not use for parking or venue policies."
+  --description "..."
 
 # Review current websites
 robin websites list "$AGENT_ID" --json
@@ -165,7 +159,42 @@ robin websites list "$AGENT_ID" --json
 robin websites remove "$AGENT_ID" "$WEBSITE_ID" --yes
 ```
 
-Write one `websites add` call per URL. Each description must follow the query-shaped format from the Pre-Flight Checklist.
+#### Writing a good description
+
+The `--description` field is required. A good description tells Robin what the site is and what to use it for.
+
+**Standard format:**
+```
+<One or two sentences about the site and what Robin should use it for.>
+
+Resource types: <comma-separated list of content types on the page>
+```
+
+**Example:**
+```
+Use this page when a contact asks about the event schedule, set times,
+or stage lineup. Contains artist names, set times, and stage assignments.
+Do not use for parking or venue policies.
+
+Resource types: set times, stage lineup, artist schedule
+```
+
+**Before writing the description, fetch the page** to see what's actually there. Don't guess. Focus on what Robin will practically use — what questions it can answer, what live data it can look up.
+
+#### Parametric URL trick
+
+When a page supports query parameters, document the full parameter schema so Robin can construct targeted URLs on the fly:
+
+```
+Event calendar with filter support.
+- ?category=music filters by category
+- ?date=2025-06-01 filters by date (YYYY-MM-DD)
+- Combine: ?category=music&date=2025-06-01
+
+Resource types: event listings, dates, categories, venue names
+```
+
+When the owner provides a URL with filters available, enumerate all valid parameter values before writing the description.
 
 ### 3.4 Dashboard-only components
 
@@ -191,51 +220,12 @@ For integrations: once connected, describe how Robin uses them inside `--user-in
 Before handing off, verify:
 
 - [ ] Timezone set
-- [ ] Website vs knowledge base decision made (not both)
-- [ ] All URL descriptions are query-shaped (trigger + contents + not-for)
+- [ ] All URL descriptions follow the standard format (trigger + Resource types + not-for)
 - [ ] `userInstructions` and `goalInstructions` are set and don't overlap
 - [ ] `scrape_url` force directive included if websites are enabled
 - [ ] Dashboard steps listed clearly for the owner
-- [ ] QA test plan produced (Phase 5)
 
----
-
-## Phase 5: QA test plan
-
-Produce 3 short test experiences the owner can run in `robin chat` or by texting the Robin directly. Each experience tests a different scenario and has 5 messages.
-
-**Format:**
-
-```markdown
-### Experience: [Short name]
-
-**Goal:** [One line — what this tests]
-
-| # | Message to send | What a good reply looks like |
-|---|-----------------|------------------------------|
-| 1 | [Exact text]    | [Criteria — not a script]    |
-| 2 | [Exact text]    | ...                          |
-| 3 | [Exact text]    | ...                          |
-| 4 | [Exact text]    | ...                          |
-| 5 | [Exact text]    | ...                          |
-```
-
-**Rubric (apply to each reply):**
-- **Correct:** Information matches the source data; nothing invented
-- **Compliant:** Follows the Robin's rules (e.g. doesn't reveal codes, doesn't paste internal URLs)
-- **Tone:** Matches intended voice (casual/concise for events; formal if configured)
-- **Complete:** Includes all necessary information in one reply
-- **Clean:** No internal labels, database names, or tool names in the reply
-
-Make the three experiences meaningfully different: vary the intent, the data source needed, and the flow (e.g. a general question, a check-in or lookup flow, an edge case the Robin might get wrong).
-
-Run tests with:
-
-```bash
-robin chat "$AGENT_ID"
-```
-
-Start a fresh conversation for each experience.
+To validate Robin's reply quality after building, use the QA testing workflow in [`skills/conversation-assessment/SKILL.md`](../conversation-assessment/SKILL.md).
 
 ---
 

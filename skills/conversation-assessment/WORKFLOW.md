@@ -207,6 +207,69 @@ That's it. No posting, no delivery. The caller decides what happens next.
 
 ---
 
+---
+
+## Phase 6: QA Testing
+
+Use this when you want to proactively test Robin's replies — before go-live, after a config change, or when the assessment surfaces a quality issue worth validating.
+
+### Testing approach
+
+Robin's reply quality degrades in long threads. Real contacts send 2–5 messages. Test the same way: 5–7 messages per session, then start a fresh conversation. A 30-message single-thread test doesn't reflect real conditions.
+
+```bash
+# Open a chat session with the Robin
+robin chat "$AGENT_ID"
+```
+
+Start a new `robin chat` session for each experience — don't carry state between them.
+
+### Design test experiences
+
+Create 3 experiences that cover meaningfully different scenarios: vary the intent, the data source needed, and the flow (e.g. a general question, a lookup or check-in flow, an edge case the Robin might get wrong).
+
+Each experience has 5 messages:
+
+```markdown
+### Experience: [Short name]
+
+**Goal:** [One line — what this tests]
+
+| # | Message to send | What a good reply looks like |
+|---|-----------------|------------------------------|
+| 1 | [Exact text]    | [Criteria — not a script]    |
+| 2 | [Exact text]    | ...                          |
+| 3 | [Exact text]    | ...                          |
+| 4 | [Exact text]    | ...                          |
+| 5 | [Exact text]    | ...                          |
+```
+
+### Score each reply
+
+| Criterion | Pass |
+|-----------|------|
+| **Correct** | Information matches the source; nothing invented |
+| **Compliant** | Follows Robin's rules (no code reveals, no internal URLs, etc.) |
+| **Tone** | Matches configured voice (casual/concise for events; formal if set) |
+| **Complete** | All necessary info in one reply |
+| **Clean** | No internal labels, database names, or tool names visible to the contact |
+
+### Iterate
+
+When a reply fails, identify which layer to fix:
+
+- Wrong facts → update `--user-instructions` and re-test
+- Wrong behavior → update `--goal-instructions` and re-test
+- Wrong data fetched → tighten the URL description and re-test
+
+```bash
+robin agents update "$AGENT_ID" \
+  --user-instructions "..." \
+  --commit-message "Fix: [what you changed]"
+```
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |

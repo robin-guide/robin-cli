@@ -1,7 +1,7 @@
 ---
 name: robin-conversation-assessment
 description: |
-  Analyze Robin agent conversations and produce a structured assessment report covering interaction quality, stumped questions, engagement patterns, named contacts, and knowledge gap recommendations. Use when asked to assess Robin conversations, analyze what the Robin has been doing, review conversation quality, or generate a Robin activity report.
+  Analyze Robin agent conversations and produce a structured assessment report covering interaction quality, stumped questions, engagement patterns, named contacts, and knowledge gap recommendations. Also used for QA testing — designing test experiences, scoring replies, and iterating on config. Use when asked to assess Robin conversations, review conversation quality, test a Robin, or generate a Robin activity report.
 allowed-tools:
   - Bash(robin:*)
   - Bash(npx:*)
@@ -21,6 +21,9 @@ The report is written to stdout (or a file if the user specifies one). How it ge
 - "analyze what people are asking the Robin"
 - "generate a Robin activity report"
 - "what questions is the Robin stumped on?"
+- "create a test plan for this Robin"
+- "QA the Robin after this config change"
+- "test that the Robin handles [scenario] correctly"
 
 ## Prerequisites
 
@@ -45,10 +48,17 @@ robin config set default-agent <agentId>
 
 ## What this skill does
 
+**Assessment mode** (real conversations):
 1. Fetches all threads for the target agent (paginated via `robin agents threads`)
 2. Retrieves full message history per thread (`robin conversations get`)
 3. Classifies each conversation using a standard taxonomy
 4. Compiles a structured Markdown assessment report
+
+**QA testing mode** (proactive testing):
+1. Designs 3 short test experiences with exact messages and scoring criteria
+2. Runs them via `robin chat`
+3. Scores each reply against a rubric
+4. Identifies which config layer to fix when something fails
 
 See `WORKFLOW.md` for the full step-by-step process.
 

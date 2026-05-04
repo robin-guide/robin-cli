@@ -10,7 +10,7 @@ allowed-tools:
 
 # Robin Builder
 
-Configure a Robin agent through a structured discovery-and-build process. Produces paste-ready configuration applied directly via the CLI, with guidance on what to set in the Robin dashboard.
+Configure a Robin agent through a structured discovery-and-build process. Produces paste-ready configuration applied directly via the CLI, with guidance on what to set in the Robin dashboard. To validate Robin's replies after building, use [`conversation-assessment`](../conversation-assessment/SKILL.md).
 
 ## When to use
 
@@ -62,7 +62,6 @@ For integrations: once connected in the dashboard, describe how Robin should use
 2. Applies the Pre-Flight Checklist before writing any config
 3. Produces and applies configuration via CLI
 4. Flags anything that needs a manual dashboard step
-5. Outputs a QA test plan the owner can use to validate Robin's replies
 
 See `WORKFLOW.md` for the full process.
 
