@@ -212,6 +212,7 @@ For more complex workflows, see:
 
 | Task | Skill |
 |------|-------|
+| Build or configure a Robin from scratch | [`skills/robin-builder/SKILL.md`](./robin-builder/SKILL.md) |
 | Analyze conversations and produce a quality report | [`skills/conversation-assessment/SKILL.md`](./conversation-assessment/SKILL.md) |
 
 ---
