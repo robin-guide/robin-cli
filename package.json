@@ -1,6 +1,6 @@
 {
   "name": "@robinai/cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Robin API CLI — scriptable access to the Robin platform",
   "type": "module",
   "bin": {
