@@ -15,6 +15,14 @@ These flags apply to every command:
 | `--team <id>` | Override the default team ID. |
 | `--verbose` | Show full request URL, masked headers, and raw response body. |
 
+## Proxy Environment Variables
+
+`robin` configures undici's global dispatcher at startup when `ROBIN_PROXY` is set. Generic proxy environment variables such as `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY` are ignored so proxying remains an explicit Robin CLI opt-in.
+
+```bash
+ROBIN_PROXY=http://127.0.0.1:8080 robin agents list
+```
+
 ---
 
 ## auth

@@ -108,6 +108,7 @@ function AgentThreadsPage({
     const id = t.id ?? t.externalId ?? '';
     const lastMsg = formatLastMessage(t.lastMessage);
     return {
+      id,
       label: t.customerName ?? t.customer?.name ?? id,
       value: { type: 'conversation-detail', threadId: id, agentId, agentName } as Route,
       description: lastMsg

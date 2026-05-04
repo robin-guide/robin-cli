@@ -101,6 +101,16 @@ After linking, `robin` points at your local checkout. Re-run `npm run build` aft
 npm run unlink
 ```
 
+## Proxy Support
+
+`robin` uses Node's built-in `fetch`, which does not automatically honor proxy environment variables. The CLI configures undici's global dispatcher at startup when `ROBIN_PROXY` is set:
+
+```bash
+ROBIN_PROXY=http://127.0.0.1:8080 robin agents list
+```
+
+Generic proxy environment variables such as `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY` are ignored so proxying remains an explicit Robin CLI opt-in.
+
 ## Why
 
 Robin users — and the AI agents they build on top of Robin — need a fast, scriptable way to interact with the Robin API without hand-rolling HTTP calls. The CLI maps 1:1 to the API surface, with:

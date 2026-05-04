@@ -11,6 +11,7 @@ import { formatError, type RobinClient } from '../../../client.js';
 
 interface Message {
   id?: string;
+  externalId?: string;
   role?: string;
   content?: string;
   createdAt?: string;
@@ -156,8 +157,9 @@ function ConversationView({ thread, threadId, agentName, client, onBack }: Conve
             const truncated = content.length > msgWidth
               ? content.slice(0, msgWidth - 1) + '…'
               : content;
+            const absoluteIndex = messages.length - Math.min(messages.length, 12) + i;
             return (
-              <Box key={msg.id ?? i} flexDirection="column" marginBottom={1}>
+              <Box key={messageKey(msg, absoluteIndex)} flexDirection="column" marginBottom={1}>
                 <Text bold color={isUser ? 'white' : 'cyan'}>{author}</Text>
                 <Box marginLeft={2}>
                   <Text wrap="wrap">{truncated}</Text>
@@ -196,4 +198,8 @@ function ConversationView({ thread, threadId, agentName, client, onBack }: Conve
       )}
     </Box>
   );
+}
+
+function messageKey(message: Message, index: number): string {
+  return `${message.id ?? message.externalId ?? message.createdAt ?? message.role ?? 'message'}:${index}`;
 }

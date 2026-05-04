@@ -11,16 +11,19 @@ interface MainMenuProps {
 
 const MENU_ITEMS: SelectItem<Route>[] = [
   {
+    id: 'agents',
     label: 'Agents',
     value: { type: 'agents' },
     description: 'Browse agents and their conversation threads',
   },
   {
+    id: 'conversations',
     label: 'Conversations',
     value: { type: 'agent-picker', next: 'conversations' },
     description: 'Triage and reply to conversation threads',
   },
   {
+    id: 'customers',
     label: 'Customers',
     value: { type: 'agent-picker', next: 'customers' },
     description: 'Look up and manage customers',
