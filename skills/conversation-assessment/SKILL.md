@@ -4,6 +4,8 @@ description: |
   Analyze Robin agent conversations and produce a structured assessment report covering interaction quality, stumped questions, engagement patterns, named contacts, and knowledge gap recommendations. Also used for QA testing — designing test experiences, scoring replies, and iterating on config. Use when asked to assess Robin conversations, review conversation quality, test a Robin, or generate a Robin activity report.
 allowed-tools:
   - Bash(robin:*)
+  - Bash(curl:*)
+  - Bash(python:*)
   - Bash(npx:*)
   - Bash(npm:*)
 ---
@@ -49,16 +51,19 @@ robin config set default-agent <agentId>
 ## What this skill does
 
 **Assessment mode** (real conversations):
+
 1. Fetches all threads for the target agent (paginated via `robin agents threads`)
 2. Retrieves full message history per thread (`robin conversations get`)
 3. Classifies each conversation using a standard taxonomy
 4. Compiles a structured Markdown assessment report
 
 **QA testing mode** (proactive testing):
-1. Designs 3 short test experiences with exact messages and scoring criteria
-2. Runs them via `robin chat`
-3. Scores each reply against a rubric
-4. Identifies which config layer to fix when something fails
+
+1. Pulls the current Robin configuration before writing tests
+2. Designs a small smoke or rubric test suite with exact prompts and expected behavior
+3. Runs tests sequentially with fresh web-channel context
+4. Scores replies for correctness, compliance, tone, completeness, and cleanliness
+5. Identifies which config layer to fix when something fails
 
 See `WORKFLOW.md` for the full step-by-step process.
 
@@ -84,3 +89,6 @@ By default, print the report to stdout. If the user asks to save it, write it to
 - **Paginate fully.** Keep fetching until `hasMore` is false, or until the agreed scope is reached.
 - **No delivery assumptions.** Do not post to Slack, send email, or share anywhere. Return the report and let the caller decide.
 - **Don't narrate the process.** Fetch, analyze, then deliver the report. Skip the play-by-play.
+- **Small tests beat broad tests.** For QA, use 5-8 focused questions before expanding scope.
+- **Fresh context for tests.** Reset the web-channel conversation before each standalone test question, and never run web-channel tests in parallel.
+- **Watch for leaked internals.** Flag hallucinated tool names, internal labels, database names, or process narration as quality failures.
