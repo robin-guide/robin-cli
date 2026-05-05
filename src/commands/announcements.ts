@@ -12,7 +12,7 @@ export function registerAnnouncements(program: Command, getGlobalOpts: () => Glo
 
   announcements
     .command('list <agentId>')
-    .description('List announcements for an agent')
+    .description('List announcements for a Robin')
     .action(async (agentId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);

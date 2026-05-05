@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Text, useApp, useInput } from 'ink';
 import TextInput from 'ink-text-input';
+import {
+  ConversationTranscript,
+  getMaxTranscriptScrollOffset,
+  type TranscriptMessage,
+} from '../shell/components/ConversationTranscript.js';
 import { Header } from '../shell/components/Header.js';
 import { HelpBar } from '../shell/components/HelpBar.js';
+import { Screen } from '../shell/components/Screen.js';
 import { useExitConfirmation } from '../components/ExitConfirmation.js';
 import { Spinner } from '../../components/Spinner.js';
 import { ErrorBox } from '../../components/ErrorBox.js';
@@ -37,6 +43,7 @@ interface ChatWindowProps {
   onBack: () => void;
 }
 
+const GOLD = '#dba76d';
 
 export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowProps): React.ReactElement {
   const { exit } = useApp();
@@ -46,6 +53,7 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [messageOffsetFromEnd, setMessageOffsetFromEnd] = useState(0);
   const { isConfirmingExit } = useExitConfirmation();
   const mountedRef = useRef(true);
 
@@ -69,6 +77,7 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
           createdAt: new Date(m.createdAt).getTime(),
         })),
       );
+      setMessageOffsetFromEnd(0);
     } catch (err) {
       if (!mountedRef.current) return;
       setError(formatError(err).message);
@@ -96,6 +105,7 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
         createdAt: Date.now(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      setMessageOffsetFromEnd(0);
     } catch (err) {
       if (!mountedRef.current) return;
       setError(formatError(err).message);
@@ -122,6 +132,16 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
   useInput((_input, key) => {
     if (isConfirmingExit) return;
     if (isSending || isResetting) return;
+    if (key.upArrow) {
+      const amount = key.shift ? Math.max(4, Math.floor((process.stdout.rows ?? 30) / 3)) : 1;
+      setMessageOffsetFromEnd(current => current + amount);
+      return;
+    }
+    if (key.downArrow) {
+      const amount = key.shift ? Math.max(4, Math.floor((process.stdout.rows ?? 30) / 3)) : 1;
+      setMessageOffsetFromEnd(current => Math.max(0, current - amount));
+      return;
+    }
     if (key.escape) {
       onBack();
     }
@@ -136,39 +156,106 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
     if (trimmed === '/quit') { exit(); return; }
     if (trimmed === '/back') { onBack(); return; }
     if (trimmed === '/reset') { resetThread(); return; }
+    if (trimmed === '/end' || trimmed === '/latest') { setMessageOffsetFromEnd(0); return; }
 
     sendMessage(trimmed);
   }
 
-  const displayedMessages = messages;
+  const termWidth = process.stdout.columns ?? 80;
+  const termRows = process.stdout.rows ?? 30;
+  const transcriptWidth = Math.min(Math.max(48, termWidth - 6), 84);
+  const bubbleWidth = Math.min(Math.max(28, Math.floor(transcriptWidth * 0.72)), 58);
+  const visibleLines = Math.max(8, termRows - 13);
+  const transcriptMessages: TranscriptMessage[] = messages.map((msg) => {
+    const isUser = msg.role === 'user';
+    return {
+      id: msg.id,
+      author: isUser ? 'you' : agentName,
+      content: msg.content,
+      align: isUser ? 'right' : 'left',
+    };
+  });
+  const maxScrollOffset = getMaxTranscriptScrollOffset(transcriptMessages, bubbleWidth, visibleLines);
+  const clampedScrollOffset = Math.min(messageOffsetFromEnd, maxScrollOffset);
+  const canScrollOlder = maxScrollOffset > clampedScrollOffset;
+  const canScrollNewer = clampedScrollOffset > 0;
 
   return (
-    <Box flexDirection="column">
-      <Header title={agentName} subtitle="chat · web channel" showBack />
+    <Screen footer={(
+      <>
+        {isResetting && (
+          <Box marginTop={1}>
+            <Spinner message="Resetting chat…" />
+          </Box>
+        )}
 
-      {/* Message history */}
-      <Box flexDirection="column" flexGrow={1}>
+        {!loadingInitial && (
+          <Box marginTop={1} alignItems="center" flexDirection="column">
+            <Box width={transcriptWidth} flexDirection="column">
+              <Box justifyContent="flex-end">
+                <Text color={GOLD} bold>you</Text>
+              </Box>
+              <Box
+                borderStyle="round"
+                borderColor={GOLD}
+                paddingX={1}
+                paddingY={1}
+                width={bubbleWidth}
+                alignSelf="flex-end"
+                flexDirection="column"
+              >
+                <Box width={Math.max(10, bubbleWidth - 6)}>
+                  <Text color={GOLD} bold>{'> '}</Text>
+                  <TextInput
+                    value={input}
+                    onChange={setInput}
+                    onSubmit={handleSubmit}
+                    placeholder="Type a message… (/reset to clear, /quit to exit)"
+                    focus={!isSending && !isResetting && !isConfirmingExit}
+                  />
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        <HelpBar bindings={[
+          { key: 'Enter', label: 'send' },
+          ...(canScrollOlder ? [{ key: '↑/Shift+↑', label: 'older' }] : []),
+          ...(canScrollNewer ? [{ key: '↓/Shift+↓', label: 'newer' }, { key: '/end', label: 'latest' }] : []),
+          { key: 'Esc', label: 'back' },
+          { key: '/reset', label: 'clear chat' },
+        ]} />
+      </>
+    )}>
+      <Header title="Chat · web channel" subtitle={agentName} showBack />
+
+      <Box flexDirection="column" flexGrow={1} alignItems="center">
         {loadingInitial ? (
           <Spinner message="Loading chat history…" />
         ) : (
-          <>
-            {displayedMessages.length === 0 && !isSending && (
+          <Box flexDirection="column" width={transcriptWidth}>
+            {transcriptMessages.length > 0 && (
+              <Box justifyContent="center" marginBottom={1}>
+                <Text dimColor>
+                  {canScrollNewer ? 'Viewing history' : 'Latest messages'}
+                  {canScrollOlder ? ' · ↑ older · Shift+↑ faster' : ''}
+                  {canScrollNewer ? ' · ↓ newer · Shift+↓ faster · /end latest' : ''}
+                </Text>
+              </Box>
+            )}
+            {transcriptMessages.length === 0 && !isSending && (
               <Text dimColor>No messages yet. Say hello!</Text>
             )}
-            {displayedMessages.map((msg) => {
-              const isUser = msg.role === 'user';
-              const label = isUser ? 'you' : agentName;
-              return (
-                <Box key={msg.id} flexDirection="column" marginBottom={1}>
-                  <Text bold color={isUser ? 'white' : 'cyan'}>{label}</Text>
-                  <Box marginLeft={2}>
-                    <Text wrap="wrap">{msg.content}</Text>
-                  </Box>
-                </Box>
-              );
-            })}
+            <ConversationTranscript
+              messages={transcriptMessages}
+              transcriptWidth={transcriptWidth}
+              bubbleWidth={bubbleWidth}
+              visibleLines={visibleLines}
+              scrollOffsetFromBottom={clampedScrollOffset}
+            />
             {isSending && <Spinner message={`${agentName} is typing…`} />}
-          </>
+          </Box>
         )}
       </Box>
 
@@ -178,34 +265,6 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
           <ErrorBox message={error} />
         </Box>
       )}
-
-      {/* Reset status */}
-      {isResetting && (
-        <Box marginTop={1}>
-          <Spinner message="Resetting chat…" />
-        </Box>
-      )}
-
-      {/* Input */}
-      {!loadingInitial && (
-        <Box marginTop={1} borderStyle="round" borderColor="cyan" paddingX={1}>
-          <Text color="cyan" bold>{'> '}</Text>
-          <TextInput
-            value={input}
-            onChange={setInput}
-            onSubmit={handleSubmit}
-            placeholder="Type a message… (/reset to clear, /quit to exit)"
-            focus={!isSending && !isResetting && !isConfirmingExit}
-          />
-        </Box>
-      )}
-
-      <HelpBar bindings={[
-        { key: 'Enter', label: 'send' },
-        { key: 'Esc', label: 'back' },
-        { key: '/reset', label: 'clear chat' },
-        { key: '/quit', label: 'exit' },
-      ]} />
-    </Box>
+    </Screen>
   );
 }

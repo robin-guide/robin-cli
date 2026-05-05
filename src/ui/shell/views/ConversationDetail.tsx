@@ -3,6 +3,12 @@ import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { AsyncView } from '../components/AsyncView.js';
 import { HelpBar } from '../components/HelpBar.js';
+import {
+  ConversationTranscript,
+  getMaxTranscriptScrollOffset,
+  type TranscriptMessage,
+} from '../components/ConversationTranscript.js';
+import { Screen } from '../components/Screen.js';
 import { Spinner } from '../../../components/Spinner.js';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { SuccessBox } from '../../../components/SuccessBox.js';
@@ -100,6 +106,7 @@ interface ConversationViewProps {
 function ConversationView({ thread, threadId, agentName, client, onBack }: ConversationViewProps): React.ReactElement {
   const [actionState, setActionState] = useState<ActionState>({ type: 'idle' });
   const [isPaused, setIsPaused] = useState(!!thread.agentPaused);
+  const [messageOffsetFromEnd, setMessageOffsetFromEnd] = useState(0);
   const { isConfirmingExit } = useExitConfirmation();
 
   const runAction = async (label: string, work: () => Promise<unknown>, successMsg: string) => {
@@ -117,6 +124,17 @@ function ConversationView({ thread, threadId, agentName, client, onBack }: Conve
 
   useInput((input, key) => {
     if (actionState.type !== 'idle') return;
+    if (key.upArrow) {
+      const amount = key.shift ? Math.max(4, Math.floor((process.stdout.rows ?? 30) / 3)) : 1;
+      setMessageOffsetFromEnd(current => current + amount);
+      return;
+    }
+    if (key.downArrow) {
+      const amount = key.shift ? Math.max(4, Math.floor((process.stdout.rows ?? 30) / 3)) : 1;
+      setMessageOffsetFromEnd(current => Math.max(0, current - amount));
+      return;
+    }
+    if (input === 'e') { setMessageOffsetFromEnd(0); return; }
     if (key.escape || input === 'q') { onBack(); return; }
     if (input === 'p') {
       const willPause = !isPaused;
@@ -135,43 +153,65 @@ function ConversationView({ thread, threadId, agentName, client, onBack }: Conve
   const title = thread.customerName ?? threadId;
 
   const termWidth = process.stdout.columns ?? 80;
-  const msgWidth = Math.max(40, termWidth - 6);
+  const termRows = process.stdout.rows ?? 30;
+  const transcriptWidth = Math.min(Math.max(48, termWidth - 6), 84);
+  const bubbleWidth = Math.min(Math.max(28, Math.floor(transcriptWidth * 0.72)), 58);
+  const visibleLines = Math.max(8, termRows - 8);
+  const transcriptMessages: TranscriptMessage[] = messages.map((msg, index) => {
+    const isCustomer = msg.role === 'user' || msg.role === 'customer';
+    return {
+      id: messageKey(msg, index),
+      author: msg.authorName ?? (isCustomer ? thread.customerName : agentName) ?? msg.role ?? 'unknown',
+      content: msg.content ?? '',
+      align: isCustomer ? 'left' : 'right',
+    };
+  });
+  const maxScrollOffset = getMaxTranscriptScrollOffset(transcriptMessages, bubbleWidth, visibleLines);
+  const clampedScrollOffset = Math.min(messageOffsetFromEnd, maxScrollOffset);
+  const canScrollOlder = maxScrollOffset > clampedScrollOffset;
+  const canScrollNewer = clampedScrollOffset > 0;
 
   return (
-    <Box flexDirection="column">
+    <Screen footer={actionState.type === 'idle' ? (
+      <HelpBar bindings={[
+        { key: 'p', label: isPaused ? 'resume AI' : 'pause AI' },
+        ...(canScrollOlder ? [{ key: '↑/Shift+↑', label: 'older' }] : []),
+        ...(canScrollNewer ? [{ key: '↓/Shift+↓', label: 'newer' }, { key: 'e', label: 'latest' }] : []),
+        { key: 'q', label: 'back' },
+      ]} />
+    ) : undefined}>
       <Header
         title={title}
         subtitle={[agentName, isPaused ? 'AI paused' : undefined].filter(Boolean).join(' · ')}
         showBack
       />
 
-      {/* Messages */}
-      {messages.length === 0 ? (
-        <Text dimColor>No messages in this thread.</Text>
-      ) : (
-        <Box flexDirection="column">
-          {messages.slice(-12).map((msg, i) => {
-            const isUser = msg.role === 'user' || msg.role === 'customer';
-            const author = msg.authorName ?? msg.role ?? 'unknown';
-            const content = msg.content ?? '';
-            const truncated = content.length > msgWidth
-              ? content.slice(0, msgWidth - 1) + '…'
-              : content;
-            const absoluteIndex = messages.length - Math.min(messages.length, 12) + i;
-            return (
-              <Box key={messageKey(msg, absoluteIndex)} flexDirection="column" marginBottom={1}>
-                <Text bold color={isUser ? 'white' : 'cyan'}>{author}</Text>
-                <Box marginLeft={2}>
-                  <Text wrap="wrap">{truncated}</Text>
-                </Box>
+      <Box flexDirection="column" alignItems="center">
+        {messages.length === 0 ? (
+          <Box width={transcriptWidth}>
+            <Text dimColor>No messages in this thread.</Text>
+          </Box>
+        ) : (
+          <Box flexDirection="column" width={transcriptWidth}>
+            {messages.length > 0 && (
+              <Box justifyContent="center" marginBottom={1}>
+                <Text dimColor>
+                  {canScrollNewer ? 'Viewing history' : 'Latest messages'}
+                  {canScrollOlder ? ' · ↑ older · Shift+↑ faster' : ''}
+                  {canScrollNewer ? ' · ↓ newer · Shift+↓ faster · e latest' : ''}
+                </Text>
               </Box>
-            );
-          })}
-          {messages.length > 12 && (
-            <Text dimColor>  ↑ {messages.length - 12} earlier messages not shown</Text>
-          )}
-        </Box>
-      )}
+            )}
+            <ConversationTranscript
+              messages={transcriptMessages}
+              transcriptWidth={transcriptWidth}
+              bubbleWidth={bubbleWidth}
+              visibleLines={visibleLines}
+              scrollOffsetFromBottom={clampedScrollOffset}
+            />
+          </Box>
+        )}
+      </Box>
 
       {/* Action feedback */}
       {actionState.type === 'working' && (
@@ -189,14 +229,7 @@ function ConversationView({ thread, threadId, agentName, client, onBack }: Conve
           {React.createElement(ErrorBox, { message: actionState.message, detail: actionState.detail })}
         </Box>
       )}
-
-      {actionState.type === 'idle' && (
-        <HelpBar bindings={[
-          { key: 'p', label: isPaused ? 'resume AI' : 'pause AI' },
-          { key: 'q', label: 'back' },
-        ]} />
-      )}
-    </Box>
+    </Screen>
   );
 }
 

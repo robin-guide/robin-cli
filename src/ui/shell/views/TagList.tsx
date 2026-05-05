@@ -10,62 +10,55 @@ import { normalizeList } from '../../../utils.js';
 import type { RobinClient } from '../../../client.js';
 import type { Route } from '../App.js';
 
-interface ThreadRow {
+interface TagRow {
   id?: string;
   externalId?: string;
-  status?: string;
-  customerName?: string;
-  customer?: {
-    name?: string | null;
-  };
-  lastMessage?: unknown;
-  updatedAt?: string;
-  agentPaused?: boolean;
+  name?: string;
+  description?: string;
+  visibility?: string;
+  additionalKeywords?: unknown[];
+  keywords?: unknown[];
 }
 
-interface ThreadsResponse {
-  threads?: ThreadRow[];
+interface TagsResponse {
+  data?: TagRow[];
+  tags?: TagRow[];
   hasMore?: boolean;
-  nextCursor?: string | null;
+  cursor?: string;
+  nextCursor?: string;
 }
 
-interface ConversationListProps {
+interface TagListProps {
   agentId: string;
   agentName: string;
-  customerId?: string;
-  customerName?: string;
   client: RobinClient;
   onNavigate: (route: Route) => void;
   onBack: () => void;
 }
 
-export function ConversationList({
+export function TagList({
   agentId,
   agentName,
-  customerId,
-  customerName,
   client,
   onNavigate,
   onBack,
-}: ConversationListProps): React.ReactElement {
+}: TagListProps): React.ReactElement {
   const [pageIndex, setPageIndex] = useState(0);
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const cursor = cursors[pageIndex];
-  const query = { cursor, customerId };
 
   return (
     <AsyncView
-      key={`${customerId ?? 'all'}:${cursor ?? 'first-page'}`}
-      work={() => client.get<ThreadsResponse>(`/agents/${agentId}/threads`, query)}
-      loadingMessage="Fetching conversations…"
+      key={cursor ?? 'first-page'}
+      work={() => client.get<TagsResponse>('/tags', { agentId, startAfter: cursor })}
+      loadingMessage="Fetching tags…"
       onBack={onBack}
     >
       {(data) => (
-        <ConversationListPage
+        <TagListPage
           data={data}
           agentId={agentId}
           agentName={agentName}
-          customerName={customerName}
           pageIndex={pageIndex}
           canGoBack={pageIndex > 0}
           onNext={(nextCursor) => {
@@ -84,11 +77,10 @@ export function ConversationList({
   );
 }
 
-interface ConversationListPageProps {
-  data: ThreadsResponse;
+interface TagListPageProps {
+  data: TagsResponse;
   agentId: string;
   agentName: string;
-  customerName?: string;
   pageIndex: number;
   canGoBack: boolean;
   onNext: (cursor: string) => void;
@@ -97,40 +89,44 @@ interface ConversationListPageProps {
   onBack: () => void;
 }
 
-function ConversationListPage({
+function TagListPage({
   data,
   agentId,
   agentName,
-  customerName,
   pageIndex,
   canGoBack,
   onNext,
   onPrevious,
   onNavigate,
   onBack,
-}: ConversationListPageProps): React.ReactElement {
-  const threads = normalizeList(data, 'threads') as ThreadRow[];
-  const nextCursor = data.nextCursor ?? undefined;
+}: TagListPageProps): React.ReactElement {
+  const tags = normalizeList(data, 'tags') as TagRow[];
+  const lastTag = tags[tags.length - 1];
+  const nextCursor = data.cursor ?? data.nextCursor ?? lastTag?.id ?? lastTag?.externalId;
   const canGoNext = !!data.hasMore && !!nextCursor;
   const { isConfirmingExit } = useExitConfirmation();
-  const title = customerName ? `Conversations: ${customerName}` : 'Conversations';
 
-  useInput((input) => {
+  useInput((input, key) => {
+    if (tags.length === 0 && (key.escape || input === 'q')) onBack();
+    if (input === 'c') onNavigate({ type: 'tag-create', agentId, agentName });
     if (input === 'n' && canGoNext) onNext(nextCursor);
     if (input === 'p' && canGoBack) onPrevious();
   }, { isActive: !isConfirmingExit });
 
-  const items: SelectItem<Route>[] = threads.map(t => {
-    const id = t.id ?? t.externalId ?? '';
-    const lastMsg = formatLastMessage(t.lastMessage);
+  const items: SelectItem<Route>[] = tags.map(tag => {
+    const id = tag.id ?? tag.externalId ?? '';
+    const keywords = Array.isArray(tag.additionalKeywords) ? tag.additionalKeywords : tag.keywords;
+    const keywordCount = Array.isArray(keywords) ? keywords.length : 0;
+    const hintParts: string[] = [];
+    if (tag.visibility) hintParts.push(tag.visibility);
+    if (keywordCount > 0) hintParts.push(`${keywordCount} keyword${keywordCount > 1 ? 's' : ''}`);
+
     return {
       id,
-      label: t.customerName ?? t.customer?.name ?? id,
-      value: { type: 'conversation-detail', threadId: id, agentId, agentName } as Route,
-      description: lastMsg
-        ? lastMsg.slice(0, 50) + (lastMsg.length > 50 ? '…' : '')
-        : undefined,
-      hint: t.agentPaused ? 'paused' : t.status,
+      label: tag.name ?? id,
+      value: { type: 'tag-detail', tagId: id, tagName: tag.name, agentId, agentName } as Route,
+      description: tag.description,
+      hint: hintParts.length > 0 ? hintParts.join(' · ') : undefined,
     };
   });
 
@@ -138,16 +134,17 @@ function ConversationListPage({
     <Screen centerContent footer={(
       <HelpBar bindings={[
         { key: '↑↓', label: 'navigate' },
-        { key: 'Enter', label: 'open' },
+        { key: 'Enter', label: 'view tag' },
+        { key: 'c', label: 'create tag' },
         ...(canGoBack ? [{ key: 'p', label: 'previous page' }] : []),
         ...(canGoNext ? [{ key: 'n', label: 'next page' }] : []),
         { key: 'q', label: 'back' },
       ]} />
     )}>
       <Box flexDirection="column" width={Math.min(process.stdout.columns ?? 80, 72)}>
-        <Header title={title} subtitle={agentName} showBack />
-        {threads.length === 0 ? (
-          <Text dimColor>{customerName ? 'No conversations found for this customer.' : 'No conversations found.'}</Text>
+        <Header title="Tags" subtitle={agentName} showBack />
+        {tags.length === 0 ? (
+          <Text dimColor>No tags found. Press c to create one.</Text>
         ) : (
           <SelectList
             items={items}
@@ -156,20 +153,10 @@ function ConversationListPage({
           />
         )}
         <Text dimColor>
-          Page {pageIndex + 1} · {threads.length} conversation{threads.length !== 1 ? 's' : ''}
+          Page {pageIndex + 1} · {tags.length} tag{tags.length !== 1 ? 's' : ''}
           {canGoNext ? ' · more on next page' : ''}
         </Text>
       </Box>
     </Screen>
   );
-}
-
-function formatLastMessage(lastMessage: unknown): string | undefined {
-  if (lastMessage == null) return undefined;
-  if (typeof lastMessage === 'string') return lastMessage;
-  if (typeof lastMessage === 'object' && 'content' in lastMessage) {
-    return String((lastMessage as { content?: unknown }).content ?? '');
-  }
-
-  return JSON.stringify(lastMessage);
 }

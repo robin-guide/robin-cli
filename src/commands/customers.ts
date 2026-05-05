@@ -41,7 +41,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
   customers
     .command('list')
     .description('List customers')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .option('--cursor <cursor>', 'Pagination cursor')
     .option('--page-size <size>', 'Page size')
     .option('--sort-by <field>', 'Sort field')
@@ -83,7 +83,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
   customers
     .command('get <customerId>')
     .description('Get a single customer')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .action(async (customerId: string, cmdOpts: { agent?: string }) => {
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
@@ -105,7 +105,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
   customers
     .command('create')
     .description('Create a customer')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .requiredOption('--phone <phone>', 'Phone number')
     .requiredOption('--name <name>', 'Customer name')
     .option('--opted-in', 'Mark as opted in')
@@ -143,7 +143,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
   customers
     .command('update <customerId>')
     .description('Update a customer')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .option('--name <name>', 'New name')
     .option('--notes <notes>', 'New notes')
     .option('--opted-in <bool>', 'Opted in status (true|false)')
@@ -177,7 +177,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
   customers
     .command('bulk-import')
     .description('Bulk import customers from a JSON file')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .requiredOption('--file <path>', 'Path to contacts JSON file')
     .option('--tag-ids <ids...>', 'Tag IDs to assign')
     .action(async (cmdOpts: { agent?: string; file: string; tagIds?: string[] }) => {
@@ -213,7 +213,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
   customers
     .command('announcements <customerId>')
     .description('Get announcements for a customer')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .action(async (customerId: string, cmdOpts: { agent?: string }) => {
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);

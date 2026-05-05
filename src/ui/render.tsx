@@ -2,12 +2,24 @@ import React from 'react';
 import { render as inkRender } from 'ink';
 import { CommandView } from './command-view.js';
 
+type RenderUIOptions = {
+  clearScreen?: boolean;
+};
+
 export function outputJSON(data: unknown): void {
   process.stdout.write(JSON.stringify(data, null, 2) + '\n');
   process.exit(0);
 }
 
-export function renderUI(component: React.ReactElement): void {
+function clearTerminal(): void {
+  if (!process.stdout.isTTY) return;
+
+  process.stdout.write('\x1b[2J\x1b[3J\x1b[H');
+}
+
+export function renderUI(component: React.ReactElement, options: RenderUIOptions = {}): void {
+  if (options.clearScreen) clearTerminal();
+
   const { waitUntilExit } = inkRender(component, { exitOnCtrlC: false });
   waitUntilExit().then(() => process.exit(0)).catch(() => process.exit(1));
 }

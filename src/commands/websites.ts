@@ -12,7 +12,7 @@ export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOp
 
   websites
     .command('list <agentId>')
-    .description('List websites for an agent')
+    .description('List websites for a Robin')
     .option('--cursor <cursor>', 'Pagination cursor')
     .option('--limit <limit>', 'Limit')
     .action(async (agentId: string, cmdOpts: { cursor?: string; limit?: string }) => {
@@ -116,7 +116,7 @@ export function registerWebsites(program: Command, getGlobalOpts: () => GlobalOp
 
   websites
     .command('configure <agentId>')
-    .description('Enable or disable the web crawler for an agent')
+    .description('Enable or disable the web crawler for a Robin')
     .option('--enable', 'Enable web crawler')
     .option('--disable', 'Disable web crawler')
     .option('--system-instructions <instructions>', 'System instructions for the crawler')

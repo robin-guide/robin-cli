@@ -24,7 +24,7 @@ program
   .option('--json', 'Output raw JSON (machine-readable)')
   .option('--api-key <key>', 'Override stored API key')
   .option('--base-url <url>', 'Override stored base URL')
-  .option('--agent <id>', 'Override default agent ID')
+  .option('--agent <id>', 'Override default Robin ID')
   .option('--team <id>', 'Override default team ID')
   .option('--verbose', 'Show request/response details');
 

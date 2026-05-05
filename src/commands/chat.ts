@@ -8,7 +8,7 @@ import type { GlobalOpts } from '../client.js';
 export function registerChat(program: Command, getGlobalOpts: () => GlobalOpts): void {
   program
     .command('chat [agentId]')
-    .description('Open a full-screen chat with a Robin agent (web channel)')
+    .description('Open a full-screen chat with a Robin (web channel)')
     .option('--api-key <key>', 'API key (overrides stored config)')
     .option('--base-url <url>', 'Base URL (overrides stored config)')
     .action((agentIdArg: string | undefined, cmdOpts: { apiKey?: string; baseUrl?: string }) => {
@@ -25,6 +25,6 @@ export function registerChat(program: Command, getGlobalOpts: () => GlobalOpts):
 
       const agentId = agentIdArg ?? globalOpts.agent ?? config.defaultAgent;
 
-      renderUI(React.createElement(ChatApp, { apiKey, baseUrl, agentId }));
+      renderUI(React.createElement(ChatApp, { apiKey, baseUrl, agentId }), { clearScreen: true });
     });
 }

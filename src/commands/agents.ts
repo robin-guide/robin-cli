@@ -35,11 +35,11 @@ function paginatedTable(
 }
 
 export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts): void {
-  const agents = program.command('agents').description('Manage Robin agents');
+  const agents = program.command('agents').description('Manage Robins');
 
   agents
     .command('list')
-    .description('List all agents')
+    .description('List all Robins')
     .action(async () => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
@@ -53,13 +53,13 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
           const data = await client.get<unknown>('/agents');
           return React.createElement(Table, { data: normalizeList(data, 'agents') });
         },
-        'Fetching agents…',
+        'Fetching Robins…',
       );
     });
 
   agents
     .command('get <agentId>')
-    .description('Get a single agent')
+    .description('Get a single Robin')
     .action(async (agentId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
@@ -71,21 +71,21 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
       renderCommand(
         async () => {
           const data = await client.get<Record<string, unknown>>(`/agents/${agentId}`);
-          return React.createElement(DetailView, { data, title: `Agent: ${agentId}` });
+          return React.createElement(DetailView, { data, title: `Robin: ${agentId}` });
         },
-        'Fetching agent…',
+        'Fetching Robin…',
       );
     });
 
   agents
     .command('create')
-    .description('Create a new agent')
-    .requiredOption('--name <name>', 'Agent name')
+    .description('Create a new Robin')
+    .requiredOption('--name <name>', 'Robin name')
     .option('--team <teamId>', 'Team ID')
-    .option('--goal-instructions <text>', 'Goal instructions — tell the agent HOW to act')
-    .option('--user-instructions <text>', 'User instructions — background knowledge for the agent')
+    .option('--goal-instructions <text>', 'Goal instructions — tell the Robin HOW to act')
+    .option('--user-instructions <text>', 'User instructions — background knowledge for the Robin')
     .option('--model <model>', 'Model override (e.g. gpt-4o-mini)')
-    .option('--time-zone <tz>', 'Agent time zone (e.g. America/New_York)')
+    .option('--time-zone <tz>', 'Robin time zone (e.g. America/New_York)')
     .action(async (cmdOpts: {
       name: string;
       team?: string;
@@ -113,20 +113,20 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
       renderCommand(
         async () => {
           const data = await client.post<Record<string, unknown>>('/agents', body);
-          return React.createElement(DetailView, { data, title: 'Agent Created' });
+          return React.createElement(DetailView, { data, title: 'Robin Created' });
         },
-        'Creating agent…',
+        'Creating Robin…',
       );
     });
 
   agents
     .command('update <agentId>')
-    .description('Update an agent')
+    .description('Update a Robin')
     .option('--name <name>', 'New name')
-    .option('--goal-instructions <text>', 'Goal instructions — tell the agent HOW to act')
-    .option('--user-instructions <text>', 'User instructions — background knowledge for the agent')
+    .option('--goal-instructions <text>', 'Goal instructions — tell the Robin HOW to act')
+    .option('--user-instructions <text>', 'User instructions — background knowledge for the Robin')
     .option('--model <model>', 'Model override (e.g. gpt-4o-mini)')
-    .option('--time-zone <tz>', 'Agent time zone (e.g. America/New_York)')
+    .option('--time-zone <tz>', 'Robin time zone (e.g. America/New_York)')
     .option('--commit-message <msg>', 'Commit message for this config change')
     .action(async (agentId: string, cmdOpts: {
       name?: string;
@@ -153,15 +153,15 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
       renderCommand(
         async () => {
           const data = await client.post<Record<string, unknown>>(`/agents/${agentId}`, body);
-          return React.createElement(DetailView, { data, title: 'Agent Updated' });
+          return React.createElement(DetailView, { data, title: 'Robin Updated' });
         },
-        'Updating agent…',
+        'Updating Robin…',
       );
     });
 
   agents
     .command('threads <agentId>')
-    .description("List agent's threads")
+    .description("List a Robin's threads")
     .option('--cursor <cursor>', 'Pagination cursor')
     .option('--page-size <size>', 'Page size')
     .action(async (agentId: string, cmdOpts: { cursor?: string; pageSize?: string }) => {
@@ -186,7 +186,7 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
 
   agents
     .command('metadata <agentId>')
-    .description('Get agent customer metadata')
+    .description('Get Robin customer metadata')
     .action(async (agentId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
@@ -198,7 +198,7 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
       renderCommand(
         async () => {
           const data = await client.get<Record<string, unknown>>(`/agents/${agentId}/metadata/customers`);
-          return React.createElement(DetailView, { data, title: 'Agent Metadata' });
+          return React.createElement(DetailView, { data, title: 'Robin Metadata' });
         },
         'Fetching metadata…',
       );
@@ -206,7 +206,7 @@ export function registerAgents(program: Command, getGlobalOpts: () => GlobalOpts
 
   agents
     .command('configs <agentId>')
-    .description('Get agent configurations')
+    .description('Get Robin configurations')
     .action(async (agentId: string) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);

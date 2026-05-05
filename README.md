@@ -9,7 +9,7 @@
   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝╚═╝  ╚══╝ ╚═╝
   ```
 
-Scriptable command-line access to the [Robin](https://robin.guide) platform. Built for humans and AI agents alike.
+Scriptable command-line access to the [Robin](https://robin.guide) platform. Built for humans and automation alike.
 
 ## Install
 
@@ -26,19 +26,19 @@ robin auth login
 # Set defaults (optional, reduces repetition)
 robin config set default-agent <agentId>
 
-# List agents
+# List Robins
 robin agents list
 
 # Send a message
 robin conversations reply <threadId> --content "Hello!"
 
-# AI-agent friendly JSON output
+# Automation-friendly JSON output
 robin agents list --json
 ```
 
 ## Interactive Mode
 
-Launch the keyboard-driven terminal UI for browsing agents, conversations, and customers:
+Launch the keyboard-driven terminal UI for browsing Robins, conversations, and customers:
 
 ```bash
 robin ui
@@ -46,15 +46,17 @@ robin ui
 
 Navigate with arrow keys, select with Enter, and go back with `q` or Escape.
 
+The **Customers** path opens a customer dossier showing identity (phone, external ID, opt-in status, tags), context (notes, welcome message), timeline, and any additional API fields. From the dossier, press `c` to open the related conversations list for that Robin.
+
 ## Chat Mode
 
-Open a full-screen chat window with a Robin agent over the same web channel used by the Robin web app:
+Open a full-screen chat window with a Robin over the same web channel used by the Robin web app:
 
 ```bash
-# Use the default agent (set via `robin config set default-agent <id>`)
+# Use the default Robin (set via `robin config set default-agent <id>`)
 robin chat
 
-# Or specify an agent directly
+# Or specify a Robin directly
 robin chat <agentId>
 
 # Override the API key or base URL for this session
@@ -70,7 +72,7 @@ Controls inside the chat window:
 | `/reset` | Clear conversation history on the web channel |
 | `/quit` | Exit immediately |
 
-Messages sent here are the same ones visible in the Robin web app's "Test Chat" view for that agent. If no agent is provided and no default is configured, a picker is shown first.
+Messages sent here are the same ones visible in the Robin web app's "Test Chat" view for that Robin. If no Robin is provided and no default is configured, a picker is shown first.
 
 ## Local Development
 
@@ -113,9 +115,9 @@ Generic proxy environment variables such as `HTTPS_PROXY`, `HTTP_PROXY`, and `AL
 
 ## Why
 
-Robin users — and the AI agents they build on top of Robin — need a fast, scriptable way to interact with the Robin API without hand-rolling HTTP calls. The CLI maps 1:1 to the API surface, with:
+Robin users need a fast, scriptable way to interact with the Robin API without hand-rolling HTTP calls. The CLI maps 1:1 to the API surface, with:
 
-- `--json` flag for clean structured output (pipes, jq, AI agents)
+- `--json` flag for clean structured output (pipes, jq, automation)
 - Human-readable formatted output with loading spinners and error boxes
 - Interactive `robin ui` mode for keyboard-first navigation
 - Global flags for CI and multi-environment use (`--api-key`, `--base-url`)
@@ -140,10 +142,10 @@ Robin users — and the AI agents they build on top of Robin — need a fast, sc
 
 | Flag | Description |
 |------|-------------|
-| `--json` | Output raw JSON (for scripting, piping to jq, AI agents) |
+| `--json` | Output raw JSON (for scripting, piping to jq, automation) |
 | `--api-key <key>` | Override stored API key |
 | `--base-url <url>` | Override stored base URL |
-| `--agent <id>` | Override default agent ID |
+| `--agent <id>` | Override default Robin ID |
 | `--team <id>` | Override default team ID |
 | `--verbose` | Show request/response details on stderr |
 
