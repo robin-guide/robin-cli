@@ -1,7 +1,7 @@
 ---
 name: robin
 description: |
-  Interact with Robin AI agents using the Robin CLI. Use for any task involving Robin agents: configuring knowledge and goals, managing websites and customers, reviewing conversations, testing an agent, sending announcements, or managing tags and invitations. This is the primary entry point for all Robin CLI work.
+  Interact with Robin AI agents using the Robin CLI. Use for any task involving Robin agents: configuring knowledge and goals, managing websites and customers, reviewing conversations, testing an agent, writing and scheduling announcements, selecting announcement tags, or managing tags and invitations. This is the primary entry point for all Robin CLI work.
 allowed-tools:
   - Bash(robin:*)
   - Bash(npx:*)
@@ -79,10 +79,8 @@ robin customers list --json | jq '.[].name'
 
 Robin agents have two distinct instruction fields:
 
-| Field | Purpose |
-|-------|---------|
-| `userInstructions` | What the Robin **knows** — facts, policies, product info, grounding knowledge |
-| `goalInstructions` | Who the Robin **is** — goals, tone, persona, behavioral directives |
+- `userInstructions`: What the Robin **knows** - facts, policies, product info, grounding knowledge
+- `goalInstructions`: Who the Robin **is** - goals, tone, persona, behavioral directives
 
 Update either field:
 
@@ -182,9 +180,24 @@ Controls: type + Enter to send, `/reset` to clear history, Esc or `/quit` to exi
 ### Manage announcements
 
 ```bash
-robin announcements list --json
-robin announcements create --content "Doors open at 7pm tonight!" --agent <agentId>
-robin announcements schedule-message <announcementId> --send-at "2025-06-01T19:00:00Z"
+# List announcements for a Robin
+robin announcements list <agentId> --json
+
+# Estimate a tagged announcement audience
+robin announcements tag-counts <agentId> --tag-ids tag_1 tag_2 --json
+
+# Create a scheduled announcement
+robin announcements create <agentId> \
+  --title "Doors Reminder" \
+  --content "Doors open at 7pm tonight!" \
+  --send-at "2025-06-01T19:00:00Z" \
+  --tag-ids tag_1
+
+# Schedule one message to one customer
+robin announcements schedule-message <agentId> \
+  --customer cust_123 \
+  --content "Your appointment is tomorrow at 10am." \
+  --send-at "2025-06-01T19:00:00Z"
 ```
 
 ### Manage tags
@@ -210,10 +223,9 @@ robin invitations revoke <invitationId> --yes
 
 For more complex workflows, see:
 
-| Task | Skill |
-|------|-------|
-| Build or configure a Robin from scratch | [`skills/robin-builder/SKILL.md`](./robin-builder/SKILL.md) |
-| Analyze conversations and produce a quality report | [`skills/conversation-assessment/SKILL.md`](./conversation-assessment/SKILL.md) |
+- Build or configure a Robin from scratch: [`skills/robin-builder/SKILL.md`](./robin-builder/SKILL.md)
+- Write, target, and schedule announcements: [`skills/announcement-builder/SKILL.md`](./announcement-builder/SKILL.md)
+- Analyze conversations and produce a quality report: [`skills/conversation-assessment/SKILL.md`](./conversation-assessment/SKILL.md)
 
 ---
 
