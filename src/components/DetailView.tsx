@@ -30,9 +30,9 @@ export function DetailView({ data, title }: DetailViewProps): React.ReactElement
   }
 
   const maxKeyLen = Math.max(...entries.map(([k]) => k.length));
-  // Reserve space: key column + 2-char gap + at least some value space
+  // Reserve space: key column + 4-char gap + at least some value space
   const terminalWidth = process.stdout.columns ?? 80;
-  const valueWidth = Math.max(20, terminalWidth - maxKeyLen - 4);
+  const valueWidth = Math.max(20, terminalWidth - maxKeyLen - 6);
 
   return (
     <Box flexDirection="column" marginBottom={1}>
@@ -47,9 +47,9 @@ export function DetailView({ data, title }: DetailViewProps): React.ReactElement
         const isMultiLine = formatted.includes('\n');
         return (
           <Box key={key} flexDirection={isMultiLine ? 'column' : 'row'}>
-            <Text color="gray">{key.padEnd(maxKeyLen + 2)}</Text>
+            <Text color="gray">{key.padEnd(maxKeyLen + 4)}</Text>
             {isMultiLine ? (
-              <Box marginLeft={maxKeyLen + 2} flexDirection="column">
+              <Box marginLeft={maxKeyLen + 4} flexDirection="column">
                 {formatted.split('\n').map((line, i) => (
                   <Text key={i} wrap="wrap">{line}</Text>
                 ))}

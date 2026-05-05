@@ -4,6 +4,7 @@ import { Spinner } from '../../../components/Spinner.js';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { formatError } from '../../../client.js';
 import { HelpBar } from './HelpBar.js';
+import { Screen } from './Screen.js';
 import { useExitConfirmation } from '../../components/ExitConfirmation.js';
 
 interface AsyncViewProps<T> {
@@ -71,9 +72,8 @@ function ErrorView({
   }, { isActive: !isConfirmingExit });
 
   return (
-    <>
+    <Screen footer={React.createElement(HelpBar, { bindings: [{ key: 'q', label: 'back' }] })}>
       {React.createElement(ErrorBox, { message, detail })}
-      {React.createElement(HelpBar, { bindings: [{ key: 'q', label: 'back' }] })}
-    </> as React.ReactElement
+    </Screen>
   );
 }

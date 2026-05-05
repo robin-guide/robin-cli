@@ -6,6 +6,7 @@ import { AsyncView } from '../shell/components/AsyncView.js';
 import { Header } from '../shell/components/Header.js';
 import { SelectList, SelectItem } from '../shell/components/SelectList.js';
 import { HelpBar } from '../shell/components/HelpBar.js';
+import { Screen } from '../shell/components/Screen.js';
 import { ExitConfirmation } from '../components/ExitConfirmation.js';
 import { normalizeList } from '../../utils.js';
 
@@ -19,7 +20,7 @@ interface AgentRow {
 interface ChatAppProps {
   apiKey: string;
   baseUrl: string;
-  /** Pre-resolved agent ID, if provided via flag or config. */
+  /** Pre-resolved Robin ID, if provided via flag or config. */
   agentId?: string;
 }
 
@@ -53,7 +54,7 @@ function ChatAppContent({ apiKey, baseUrl, agentId: initialAgentId }: ChatAppPro
     return (
       <AsyncView
         work={() => client.get<unknown>('/agents')}
-        loadingMessage="Loading agent…"
+        loadingMessage="Loading Robin…"
         onBack={() => exit()}
       >
         {(data) => {
@@ -95,7 +96,7 @@ function AgentPicker({ client, onSelect, onCancel }: AgentPickerProps): React.Re
   return (
     <AsyncView
       work={() => client.get<unknown>('/agents')}
-      loadingMessage="Fetching agents…"
+      loadingMessage="Fetching Robins…"
       onBack={onCancel}
     >
       {(data) => {
@@ -107,19 +108,20 @@ function AgentPicker({ client, onSelect, onCancel }: AgentPickerProps): React.Re
         });
 
         return (
-          <React.Fragment>
-            <Header title="Chat — select an agent" />
-            <SelectList
-              items={items}
-              onSelect={item => onSelect(item.value.id, item.value.name)}
-              onCancel={onCancel}
-            />
+          <Screen footer={(
             <HelpBar bindings={[
               { key: '↑↓', label: 'navigate' },
               { key: 'Enter', label: 'open chat' },
               { key: 'q', label: 'quit' },
             ]} />
-          </React.Fragment>
+          )}>
+            <Header title="Chat — select a Robin" />
+            <SelectList
+              items={items}
+              onSelect={item => onSelect(item.value.id, item.value.name)}
+              onCancel={onCancel}
+            />
+          </Screen>
         );
       }}
     </AsyncView>

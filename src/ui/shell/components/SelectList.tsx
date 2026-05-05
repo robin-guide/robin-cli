@@ -31,19 +31,24 @@ export function SelectList<V>({
   const { isConfirmingExit } = useExitConfirmation();
   const isActive = isFocused && !isConfirmingExit;
 
+  const moveCursor = (direction: -1 | 1) => {
+    const next = direction === -1
+      ? Math.max(0, cursor - 1)
+      : Math.min(items.length - 1, cursor + 1);
+    setCursor(next);
+    if (next < offset) setOffset(next);
+    if (next >= offset + limit) setOffset(next - limit + 1);
+  };
+
   useInput((input, key) => {
     if (!isActive) return;
 
-    if (key.upArrow) {
-      const next = Math.max(0, cursor - 1);
-      setCursor(next);
-      if (next < offset) setOffset(next);
+    if (key.upArrow || key.leftArrow) {
+      moveCursor(-1);
     }
 
-    if (key.downArrow) {
-      const next = Math.min(items.length - 1, cursor + 1);
-      setCursor(next);
-      if (next >= offset + limit) setOffset(next - limit + 1);
+    if (key.downArrow || key.rightArrow) {
+      moveCursor(1);
     }
 
     if (key.return) {
@@ -72,17 +77,17 @@ export function SelectList<V>({
         const isSelected = index === cursor;
         return (
           <Box key={item.id ?? `${item.label}:${index}`}>
-            <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
-              {isSelected ? '▶ ' : '  '}
+            <Text color={isSelected ? 'cyan' : 'gray'} bold={isSelected}>
+              {isSelected ? '>> ' : '   '}
             </Text>
             <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
               {item.label}
             </Text>
             {item.description && (
-              <Text dimColor>{' — ' + item.description}</Text>
+              <Text color="gray">{'  -  ' + item.description}</Text>
             )}
             {item.hint && (
-              <Text color="gray">{' [' + item.hint + ']'}</Text>
+              <Text color="gray">{'  [' + item.hint + ']'}</Text>
             )}
           </Box>
         );

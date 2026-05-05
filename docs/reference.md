@@ -1,6 +1,6 @@
 # Robin CLI — Full Command Reference
 
-> This document is optimized for AI agent consumption. Every command is listed with its flags, required API permissions, the underlying API route, and example usage.
+> This document is optimized for automation. Every command is listed with its flags, required API permissions, the underlying API route, and example usage.
 
 ## Global Flags
 
@@ -8,10 +8,10 @@ These flags apply to every command:
 
 | Flag | Description |
 |------|-------------|
-| `--json` | Emit raw JSON to stdout. No colors, no tables. Use this in scripts and AI agents. |
+| `--json` | Emit raw JSON to stdout. No colors, no tables. Use this in scripts and automation. |
 | `--api-key <key>` | Override the stored API key (useful in CI). |
 | `--base-url <url>` | Override the stored base URL. |
-| `--agent <id>` | Override the default agent ID. |
+| `--agent <id>` | Override the default Robin ID. |
 | `--team <id>` | Override the default team ID. |
 | `--verbose` | Show full request URL, masked headers, and raw response body. |
 
@@ -63,7 +63,7 @@ Example output:
 ```
 API Key:       robin_xxx...
 Base URL:      https://api.robin.guide
-Default Agent: agent_abc123
+Default Robin: agent_abc123
 Default Team:  (none)
 API Status:    ✓ reachable (200)
 ```
@@ -132,8 +132,8 @@ robin agents create --name "Support Bot" --team team_xyz \
 
 **Flags:** `--name <name>` (required), `--team <teamId>`, `--goal-instructions <text>`, `--user-instructions <text>`, `--model <model>`, `--time-zone <tz>`
 
-- `--goal-instructions` — Tells the agent HOW to act (personality, tone, rules)
-- `--user-instructions` — Provides the agent with background knowledge about users/context
+- `--goal-instructions` — Tells the Robin HOW to act (personality, tone, rules)
+- `--user-instructions` — Provides the Robin with background knowledge about users/context
 
 ### `robin agents update <agentId>`
 
@@ -149,8 +149,8 @@ robin agents update agent_abc123 \
 
 **Flags:** `--name <name>`, `--goal-instructions <text>`, `--user-instructions <text>`, `--model <model>`, `--time-zone <tz>`, `--commit-message <msg>`
 
-- `--goal-instructions` — Tells the agent HOW to act (personality, tone, rules)
-- `--user-instructions` — Provides the agent with background knowledge about users/context
+- `--goal-instructions` — Tells the Robin HOW to act (personality, tone, rules)
+- `--user-instructions` — Provides the Robin with background knowledge about users/context
 - `--commit-message` — Describes what changed (stored in configuration history)
 
 ### `robin agents threads <agentId>`
@@ -526,7 +526,7 @@ robin invitations revoke inv_abc123
 
 **Required permission:** `threads.write` (sends messages via the web channel)
 
-Open a full-screen interactive chat window connected to the APP_ROBIN web channel for an agent. Messages are visible in the Robin web app's Test Chat view for the same agent.
+Open a full-screen interactive chat window connected to the APP_ROBIN web channel for a Robin. Messages are visible in the Robin web app's Test Chat view for the same Robin.
 
 ### `robin chat [agentId]`
 
@@ -535,17 +535,17 @@ Open a full-screen interactive chat window connected to the APP_ROBIN web channe
 **API (reset):** `POST /channels/web/messages/:agentId/reset`
 
 ```bash
-# Use the configured default agent
+# Use the configured default Robin
 robin chat
 
-# Specify agent explicitly
+# Specify a Robin explicitly
 robin chat agent_abc123
 
 # Override API key for this session
 robin chat agent_abc123 --api-key <key>
 ```
 
-**Arguments:** `agentId` (optional — falls back to `--agent` flag or `default-agent` config; shows a picker if none is set)
+**Arguments:** `agentId` (optional Robin ID — falls back to `--agent` flag or `default-agent` config; shows a picker if none is set)
 
 **Flags:** `--api-key <key>`, `--base-url <url>`
 
@@ -553,7 +553,7 @@ robin chat agent_abc123 --api-key <key>
 
 | Input | Action |
 |-------|--------|
-| Type + `Enter` | Send message to agent |
+| Type + `Enter` | Send message to Robin |
 | `Esc` | Exit chat |
 | `/reset` | Clear the web-channel thread history |
 | `/quit` | Exit immediately |

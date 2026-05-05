@@ -20,6 +20,6 @@ export function registerUI(program: Command): void {
         process.exit(1);
       }
 
-      renderUI(React.createElement(App, { apiKey, baseUrl }));
+      renderUI(React.createElement(App, { apiKey, baseUrl, agentId: config.defaultAgent }), { clearScreen: true });
     });
 }

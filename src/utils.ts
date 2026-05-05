@@ -2,7 +2,7 @@ import { GlobalOpts } from './client.js';
 import { readConfig } from './config.js';
 
 /**
- * Resolve an agent ID from (in priority order):
+ * Resolve a Robin ID from (in priority order):
  * 1. Command-level --agent flag
  * 2. Global --agent flag
  * 3. Stored default-agent in config
@@ -13,7 +13,7 @@ export function resolveAgent(opts: GlobalOpts, cmdOpts: { agent?: string }): str
   const agentId = cmdOpts.agent ?? opts.agent ?? readConfig().defaultAgent;
   if (!agentId) {
     console.error(
-      'Agent ID required. Pass --agent <id> or set a default with `robin config set default-agent`.',
+      'Robin ID required. Pass --agent <id> or set a default with `robin config set default-agent`.',
     );
     process.exit(1);
   }
@@ -36,6 +36,14 @@ export function normalizeList(
     envelopeKey in data
   ) {
     const val = (data as Record<string, unknown>)[envelopeKey];
+    if (Array.isArray(val)) return val as Record<string, unknown>[];
+  }
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'data' in data
+  ) {
+    const val = (data as Record<string, unknown>).data;
     if (Array.isArray(val)) return val as Record<string, unknown>[];
   }
   return [data as Record<string, unknown>];

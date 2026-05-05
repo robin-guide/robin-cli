@@ -14,7 +14,7 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
   tags
     .command('list')
     .description('List tags')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .option('--cursor <cursor>', 'Pagination cursor')
     .option('--limit <limit>', 'Limit')
     .action(async (cmdOpts: { agent?: string; cursor?: string; limit?: string }) => {
@@ -22,7 +22,7 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
       if (opts.json) {
-        try { outputJSON(await client.get<unknown>('/tags', { agentId, cursor: cmdOpts.cursor, limit: cmdOpts.limit })); }
+        try { outputJSON(await client.get<unknown>('/tags', { agentId, startAfter: cmdOpts.cursor, limit: cmdOpts.limit })); }
         catch (err) { handleError(err); }
         return;
       }
@@ -30,7 +30,7 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
         async () => {
           const data = await client.get<unknown>('/tags', {
             agentId,
-            cursor: cmdOpts.cursor,
+            startAfter: cmdOpts.cursor,
             limit: cmdOpts.limit,
           });
           return React.createElement(Table, { data: normalizeList(data, 'tags') });
@@ -62,7 +62,7 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
   tags
     .command('create')
     .description('Create a tag')
-    .option('--agent <agentId>', 'Agent ID')
+    .option('--agent <agentId>', 'Robin ID')
     .requiredOption('--name <name>', 'Tag name')
     .option('--description <desc>', 'Description')
     .option('--visibility <visibility>', 'Visibility')

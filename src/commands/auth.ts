@@ -60,7 +60,7 @@ export function registerAuth(program: Command): void {
       const baseUrl = config.baseUrl ?? 'https://api.robin.guide';
       console.log(`API Key:       ${maskKey(config.apiKey)}`);
       console.log(`Base URL:      ${baseUrl}`);
-      console.log(`Default Agent: ${config.defaultAgent ?? '(none)'}`);
+      console.log(`Default Robin: ${config.defaultAgent ?? '(none)'}`);
       console.log(`Default Team:  ${config.defaultTeam ?? '(none)'}`);
 
       // Check API reachability
