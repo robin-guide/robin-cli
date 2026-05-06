@@ -449,7 +449,7 @@ export function CustomerDetail({
         const [customer, tagResponse, tagsResponse] = await Promise.all([
           client.get<Record<string, unknown>>(`/customers/${customerId}`, { agentId }),
           client
-            .get<CustomerTagsResponse>(`/customers/${customerId}/tags`, { limit: 100 })
+            .get<CustomerTagsResponse>(`/customers/${customerId}/tags`, { agentId, limit: 100 })
             .catch((): CustomerTagsResponse => ({ data: [] })),
           client
             .get<TagsResponse>('/tags', { agentId, limit: 100 })
