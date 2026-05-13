@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Text, useApp, useWindowSize } from 'ink';
+import { Box, Text, useApp } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 import { SelectList, SelectItem } from '../components/SelectList.js';
 import { HelpBar } from '../components/HelpBar.js';
 import { Screen } from '../components/Screen.js';

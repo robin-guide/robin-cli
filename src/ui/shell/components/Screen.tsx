@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, useWindowSize } from 'ink';
+import { Box } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 
 interface ScreenProps {
   children: React.ReactNode;

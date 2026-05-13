@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Text, useApp, useInput, useWindowSize } from 'ink';
+import { Box, Text, useApp, useInput } from 'ink';
+import { useWindowSize } from '../../hooks/useWindowSize.js';
 import TextInput from 'ink-text-input';
 import {
   ConversationTranscript,

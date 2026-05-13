@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput, useWindowSize } from 'ink';
+import { Box, Text, useInput } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 import { Confirm } from '../../../components/Confirm.js';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { Spinner } from '../../../components/Spinner.js';

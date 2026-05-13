@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput, useWindowSize } from 'ink';
+import { Box, Text, useInput } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 import { Header } from '../components/Header.js';
 import { SelectList, SelectItem } from '../components/SelectList.js';
 import { AsyncView } from '../components/AsyncView.js';

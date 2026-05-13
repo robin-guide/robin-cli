@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Text, useWindowSize } from 'ink';
+import { Box, Text } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 
 interface HeaderProps {
   /** The current section or screen name. */
