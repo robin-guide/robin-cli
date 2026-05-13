@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -12,8 +13,8 @@ export function Screen({
   footer,
   centerContent = false,
 }: ScreenProps): React.ReactElement {
-  const terminalRows = process.stdout.rows;
-  const height = terminalRows && terminalRows > 0 ? terminalRows : undefined;
+  const { rows } = useWindowSize();
+  const height = rows > 0 ? rows : undefined;
 
   return (
     <Box flexDirection="column" height={height}>

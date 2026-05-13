@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
+import { useWindowSize } from '../hooks/useWindowSize.js';
 
 interface TableProps {
   data: Record<string, unknown>[];
@@ -19,11 +20,11 @@ function truncate(s: string, width: number): string {
 }
 
 export function Table({ data, columns }: TableProps): React.ReactElement {
+  const { columns: terminalWidth } = useWindowSize();
+
   if (data.length === 0) {
     return <Text color="gray">No results.</Text>;
   }
-
-  const terminalWidth = process.stdout.columns ?? 80;
   const cols = columns ?? Object.keys(data[0] ?? {});
 
   // Natural column widths: max of header and cell content, capped at 40

@@ -157,15 +157,16 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       if (cmdOpts.name) body.name = cmdOpts.name;
       if (cmdOpts.notes) body.notes = cmdOpts.notes;
       if (cmdOpts.optedIn !== undefined) body.optedIn = cmdOpts.optedIn === 'true';
+      body.agentId = agentId;
       if (opts.json) {
-        try { outputJSON(await client.patch<Record<string, unknown>>(`/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`, body)); }
+        try { outputJSON(await client.patch<Record<string, unknown>>(`/customers/${customerId}`, body)); }
         catch (err) { handleError(err); }
         return;
       }
       renderCommand(
         async () => {
           const data = await client.patch<Record<string, unknown>>(
-            `/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`,
+            `/customers/${customerId}`,
             body,
           );
           return React.createElement(DetailView, { data, title: 'Customer Updated' });

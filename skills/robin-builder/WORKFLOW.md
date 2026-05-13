@@ -4,6 +4,30 @@ Build or tune a Robin agent: discover the use case, configure via CLI, flag dash
 
 ---
 
+## Phase 0: Team selection (required before creating a new Robin)
+
+Every Robin must belong to a team. **Never run `robin agents create` without `--team`.**
+
+Start by listing the available teams so the user can pick one:
+
+```bash
+robin teams list
+```
+
+Show the output to the user and ask which team this Robin should belong to. If only one team is returned, confirm it before proceeding. Do not guess or default silently.
+
+Once confirmed, store it as `$TEAM_ID` for use in the create command:
+
+```bash
+robin agents create \
+  --name "<Robin name>" \
+  --team "$TEAM_ID"
+```
+
+If the user already has an existing Robin and is only updating configuration (not creating), skip this phase.
+
+---
+
 ## Phase 1: Discovery
 
 Run a short conversational discovery before writing any config. One question at a time — don't front-load a list.
@@ -219,6 +243,7 @@ For integrations: once connected, describe how Robin uses them inside `--user-in
 
 Before handing off, verify:
 
+- [ ] Robin was created with `--team` (not without it)
 - [ ] Timezone set
 - [ ] All URL descriptions follow the standard format (trigger + Resource types + not-for)
 - [ ] `userInstructions` and `goalInstructions` are set and don't overlap

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text, useApp } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 import { SelectList, SelectItem } from '../components/SelectList.js';
 import { HelpBar } from '../components/HelpBar.js';
 import { Screen } from '../components/Screen.js';
@@ -79,8 +80,8 @@ let hasShownSplash = false;
 export function MainMenu({ onNavigate, onOpenChat }: MainMenuProps): React.ReactElement {
   const { exit } = useApp();
   const [showSplash, setShowSplash] = useState(!hasShownSplash);
-  const terminalWidth = Math.max(1, process.stdout.columns ?? 80);
-  const panelWidth = Math.min(terminalWidth, 76);
+  const { columns } = useWindowSize();
+  const panelWidth = Math.min(Math.max(1, columns), 76);
 
   useEffect(() => {
     if (!showSplash) return undefined;

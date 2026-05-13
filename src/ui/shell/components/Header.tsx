@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 
 interface HeaderProps {
   /** The current section or screen name. */
@@ -13,7 +14,8 @@ const ALBUMEN = '#ffffff';
 const GOLD = '#dba76d';
 
 export function Header({ title, subtitle, showBack }: HeaderProps): React.ReactElement {
-  const width = Math.min(process.stdout.columns ?? 80, 72);
+  const { columns } = useWindowSize();
+  const width = Math.min(columns, 72);
 
   return (
     <Box flexDirection="column" marginBottom={1}>

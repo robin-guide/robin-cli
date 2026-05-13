@@ -50,13 +50,19 @@ export function AgentDetail({ agentId, agentName, onNavigate, onBack }: AgentDet
       description: 'Create and tune audience tags',
       route: { type: 'tags', agentId, agentName },
     },
+    {
+      id: 'announcements',
+      label: 'Announcements',
+      description: 'Create and manage SMS announcements for opted-in contacts',
+      route: { type: 'announcements' as const, agentId, agentName },
+    },
   ];
 
   useInput((input, key) => {
     if (isConfirmingExit) return;
     if (key.upArrow || key.leftArrow) setCursor(c => Math.max(0, c - 1));
     if (key.downArrow || key.rightArrow) setCursor(c => Math.min(items.length - 1, c + 1));
-    if (key.return) onNavigate(items[cursor].route);
+    if (key.return) onNavigate(items[cursor]!.route);
     if (key.escape || input === 'q') onBack();
   });
 

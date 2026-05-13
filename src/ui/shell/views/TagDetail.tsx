@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { useWindowSize } from '../../../hooks/useWindowSize.js';
 import { Confirm } from '../../../components/Confirm.js';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { Spinner } from '../../../components/Spinner.js';
@@ -117,8 +118,8 @@ function TagDossier({
   const [deletePhase, setDeletePhase] = useState<DeletePhase>('view');
   const [error, setError] = useState<{ message: string; detail?: string } | null>(null);
   const { isConfirmingExit } = useExitConfirmation();
-  const termWidth = process.stdout.columns ?? 80;
-  const valueWidth = Math.max(20, termWidth - 22);
+  const { columns } = useWindowSize();
+  const valueWidth = Math.max(20, columns - 22);
 
   async function deleteTag() {
     setDeletePhase('deleting');
