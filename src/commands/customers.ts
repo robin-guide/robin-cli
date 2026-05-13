@@ -64,7 +64,7 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
         sortOrder: cmdOpts.sortOrder,
         tagId: cmdOpts.tagId,
         name: cmdOpts.name,
-        phone: cmdOpts.phone,
+        phoneNumber: cmdOpts.phone,
       };
       if (opts.json) {
         try { outputJSON(await client.get<unknown>('/customers', query)); }
@@ -118,22 +118,22 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
-      const body = {
+      const query: Record<string, string | undefined> = {
         agentId,
-        phone: cmdOpts.phone,
+        phoneNumber: cmdOpts.phone,
         name: cmdOpts.name,
-        ...(cmdOpts.optedIn !== undefined && { optedIn: cmdOpts.optedIn }),
+        ...(cmdOpts.optedIn !== undefined && { optedIn: String(cmdOpts.optedIn) }),
         ...(cmdOpts.notes && { notes: cmdOpts.notes }),
         ...(cmdOpts.welcomeMessage && { welcomeMessage: cmdOpts.welcomeMessage }),
       };
       if (opts.json) {
-        try { outputJSON(await client.post<Record<string, unknown>>('/customers', body)); }
+        try { outputJSON(await client.post<Record<string, unknown>>('/customers', undefined, query)); }
         catch (err) { handleError(err); }
         return;
       }
       renderCommand(
         async () => {
-          const data = await client.post<Record<string, unknown>>('/customers', body);
+          const data = await client.post<Record<string, unknown>>('/customers', undefined, query);
           return React.createElement(DetailView, { data, title: 'Customer Created' });
         },
         'Creating customer…',
@@ -156,16 +156,16 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
       const body: Record<string, unknown> = {};
       if (cmdOpts.name) body.name = cmdOpts.name;
       if (cmdOpts.notes) body.notes = cmdOpts.notes;
-      if (cmdOpts.optedIn !== undefined) body.optedIn = cmdOpts.optedIn === 'true';
+      if (cmdOpts.optedIn !== undefined) body.isOptedIn = cmdOpts.optedIn === 'true';
       body.agentId = agentId;
       if (opts.json) {
-        try { outputJSON(await client.patch<Record<string, unknown>>(`/customers/${customerId}`, body)); }
+        try { outputJSON(await client.post<Record<string, unknown>>(`/customers/${customerId}`, body)); }
         catch (err) { handleError(err); }
         return;
       }
       renderCommand(
         async () => {
-          const data = await client.patch<Record<string, unknown>>(
+          const data = await client.post<Record<string, unknown>>(
             `/customers/${customerId}`,
             body,
           );

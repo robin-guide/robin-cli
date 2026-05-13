@@ -46,7 +46,7 @@ export function registerInvitations(program: Command, getGlobalOpts: () => Globa
         process.exit(1);
       }
       const client = createClient(opts);
-      const body = { teamId, phone: cmdOpts.phone, name: cmdOpts.name };
+      const body = { teamId, phoneNumber: cmdOpts.phone, name: cmdOpts.name };
       if (opts.json) {
         try { outputJSON(await client.post<Record<string, unknown>>('/invitations', body)); }
         catch (err) { handleError(err); }
