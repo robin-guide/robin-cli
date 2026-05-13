@@ -65,12 +65,12 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
     .option('--agent <agentId>', 'Robin ID')
     .requiredOption('--name <name>', 'Tag name')
     .option('--description <desc>', 'Description')
-    .option('--visibility <visibility>', 'Visibility')
-    .option('--keywords <keywords...>', 'Keywords')
+    .option('--visibility <visibility>', 'Visibility (PRIVATE | CONTEXTUAL | PUBLIC)')
+    .option('--additional-keywords <keywords...>', 'Additional subscribe keywords (PUBLIC tags only)')
     .option('--welcome-message <msg>', 'Welcome message')
     .action(async (cmdOpts: {
       agent?: string; name: string; description?: string;
-      visibility?: string; keywords?: string[]; welcomeMessage?: string;
+      visibility?: string; additionalKeywords?: string[]; welcomeMessage?: string;
     }) => {
       const opts = getGlobalOpts();
       const agentId = resolveAgent(opts, cmdOpts);
@@ -80,7 +80,7 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
         name: cmdOpts.name,
         ...(cmdOpts.description && { description: cmdOpts.description }),
         ...(cmdOpts.visibility && { visibility: cmdOpts.visibility }),
-        ...(cmdOpts.keywords && { keywords: cmdOpts.keywords }),
+        ...(cmdOpts.additionalKeywords && { additionalKeywords: cmdOpts.additionalKeywords }),
         ...(cmdOpts.welcomeMessage && { welcomeMessage: cmdOpts.welcomeMessage }),
       };
       if (opts.json) {
@@ -101,18 +101,18 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
     .command('update <tagId>')
     .description('Update a tag')
     .option('--description <desc>', 'New description')
-    .option('--visibility <visibility>', 'New visibility')
-    .option('--keywords <keywords...>', 'New keywords')
+    .option('--visibility <visibility>', 'New visibility (PRIVATE | CONTEXTUAL | PUBLIC)')
+    .option('--additional-keywords <keywords...>', 'New additional subscribe keywords')
     .option('--welcome-message <msg>', 'New welcome message')
     .action(async (tagId: string, cmdOpts: {
-      description?: string; visibility?: string; keywords?: string[]; welcomeMessage?: string;
+      description?: string; visibility?: string; additionalKeywords?: string[]; welcomeMessage?: string;
     }) => {
       const opts = getGlobalOpts();
       const client = createClient(opts);
       const body: Record<string, unknown> = {};
       if (cmdOpts.description) body.description = cmdOpts.description;
       if (cmdOpts.visibility) body.visibility = cmdOpts.visibility;
-      if (cmdOpts.keywords) body.keywords = cmdOpts.keywords;
+      if (cmdOpts.additionalKeywords) body.additionalKeywords = cmdOpts.additionalKeywords;
       if (cmdOpts.welcomeMessage) body.welcomeMessage = cmdOpts.welcomeMessage;
       if (opts.json) {
         try { outputJSON(await client.patch<Record<string, unknown>>(`/tags/${tagId}`, body)); }
@@ -176,12 +176,15 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
   tags
     .command('unassign <customerId> <tagCustomerId>')
     .description('Remove a tag from a customer')
-    .action(async (customerId: string, tagCustomerId: string) => {
+    .option('--agent <agentId>', 'Robin ID')
+    .action(async (customerId: string, tagCustomerId: string, cmdOpts: { agent?: string }) => {
       const opts = getGlobalOpts();
+      const agentId = resolveAgent(opts, cmdOpts);
       const client = createClient(opts);
+      const path = `/customers/${customerId}/tags/${tagCustomerId}?agentId=${encodeURIComponent(agentId)}`;
       if (opts.json) {
         try {
-          await client.delete<unknown>(`/customers/${customerId}/tags/${tagCustomerId}`);
+          await client.delete<unknown>(path);
           outputJSON({ unassigned: true });
         }
         catch (err) { handleError(err); }
@@ -189,7 +192,7 @@ export function registerTags(program: Command, getGlobalOpts: () => GlobalOpts):
       }
       renderCommand(
         async () => {
-          await client.delete<unknown>(`/customers/${customerId}/tags/${tagCustomerId}`);
+          await client.delete<unknown>(path);
           return React.createElement(SuccessBox, { message: `Tag removed from customer ${customerId}.` });
         },
         'Removing tag…',

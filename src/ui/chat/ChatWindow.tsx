@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Text, useApp, useInput } from 'ink';
+import { Box, Text, useApp, useInput, useWindowSize } from 'ink';
 import TextInput from 'ink-text-input';
 import {
   ConversationTranscript,
@@ -55,6 +55,7 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
   const [isResetting, setIsResetting] = useState(false);
   const [messageOffsetFromEnd, setMessageOffsetFromEnd] = useState(0);
   const { isConfirmingExit } = useExitConfirmation();
+  const { columns: termWidth, rows: termRows } = useWindowSize();
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -133,12 +134,12 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
     if (isConfirmingExit) return;
     if (isSending || isResetting) return;
     if (key.upArrow) {
-      const amount = key.shift ? Math.max(4, Math.floor((process.stdout.rows ?? 30) / 3)) : 1;
+      const amount = key.shift ? Math.max(4, Math.floor(termRows / 3)) : 1;
       setMessageOffsetFromEnd(current => current + amount);
       return;
     }
     if (key.downArrow) {
-      const amount = key.shift ? Math.max(4, Math.floor((process.stdout.rows ?? 30) / 3)) : 1;
+      const amount = key.shift ? Math.max(4, Math.floor(termRows / 3)) : 1;
       setMessageOffsetFromEnd(current => Math.max(0, current - amount));
       return;
     }
@@ -161,8 +162,6 @@ export function ChatWindow({ agentId, agentName, client, onBack }: ChatWindowPro
     sendMessage(trimmed);
   }
 
-  const termWidth = process.stdout.columns ?? 80;
-  const termRows = process.stdout.rows ?? 30;
   const transcriptWidth = Math.min(Math.max(48, termWidth - 6), 84);
   const bubbleWidth = Math.min(Math.max(28, Math.floor(transcriptWidth * 0.72)), 58);
   const visibleLines = Math.max(8, termRows - 13);

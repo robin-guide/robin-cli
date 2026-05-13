@@ -11,6 +11,7 @@ import { CustomerDetail } from './views/CustomerDetail.js';
 import { TagList } from './views/TagList.js';
 import { TagDetail } from './views/TagDetail.js';
 import { TagEditor } from './views/TagEditor.js';
+import { AnnouncementScreen } from './views/AnnouncementScreen.js';
 import { ExitConfirmation } from '../components/ExitConfirmation.js';
 import { ChatWindow } from '../chat/ChatWindow.js';
 import { AsyncView } from './components/AsyncView.js';
@@ -31,7 +32,8 @@ export type Route =
   | { type: 'tags'; agentId: string; agentName: string }
   | { type: 'tag-detail'; tagId: string; tagName?: string; agentId: string; agentName?: string }
   | { type: 'tag-create'; agentId: string; agentName: string }
-  | { type: 'tag-edit'; tagId: string; tagName?: string; agentId: string; agentName?: string };
+  | { type: 'tag-edit'; tagId: string; tagName?: string; agentId: string; agentName?: string }
+  | { type: 'announcements'; agentId: string; agentName: string };
 
 interface AppProps {
   apiKey: string;
@@ -124,6 +126,7 @@ export function App({ apiKey, baseUrl, agentId: initialAgentId }: AppProps): Rea
         <AgentDetail
           agentId={current.agentId}
           agentName={current.agentName}
+          client={client}
           onNavigate={push}
           onBack={pop}
         />
@@ -267,6 +270,17 @@ export function App({ apiKey, baseUrl, agentId: initialAgentId }: AppProps): Rea
           agentName={current.agentName}
           client={client}
           onNavigate={push}
+          onBack={pop}
+        />
+      );
+      break;
+
+    case 'announcements':
+      view = (
+        <AnnouncementScreen
+          agentId={current.agentId}
+          agentName={current.agentName}
+          client={client}
           onBack={pop}
         />
       );

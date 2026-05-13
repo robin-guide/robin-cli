@@ -135,6 +135,7 @@ Robin users need a fast, scriptable way to interact with the Robin API without h
 | `tags` | `list`, `get`, `create`, `update`, `delete`, `assign`, `unassign` |
 | `websites` | `list`, `add`, `update`, `remove`, `configure` |
 | `invitations` | `list`, `create`, `revoke` |
+| `teams` | `list`, `get` |
 | `ui` | Launch interactive shell |
 
 ### Global flags

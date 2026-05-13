@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useWindowSize } from 'ink';
 import TextInput from 'ink-text-input';
 import { ErrorBox } from '../../../components/ErrorBox.js';
 import { Spinner } from '../../../components/Spinner.js';
@@ -136,13 +136,14 @@ function CustomerDossier({
   const [customerTags, setCustomerTags] = useState(initialCustomerTags);
   const [mode, setMode] = useState<CustomerMode>({ type: 'view' });
   const { isConfirmingExit } = useExitConfirmation();
+  const { columns } = useWindowSize();
 
   async function updateCustomer(body: Record<string, unknown>, successMessage: string) {
     setMode({ type: 'working', label: 'Updating customer…' });
     try {
       const updated = await client.patch<Record<string, unknown>>(
-        `/customers/${customerId}?agentId=${encodeURIComponent(agentId)}`,
-        body,
+        `/customers/${customerId}`,
+        { ...body, agentId },
       );
       setData(current => ({ ...current, ...normalizeCustomerData(updated), ...body }));
       setMode({ type: 'success', message: successMessage });
@@ -237,8 +238,7 @@ function CustomerDossier({
   // Remaining unknown fields
   const extras = Object.entries(data).filter(([k]) => !HANDLED_KEYS.has(k));
 
-  const termWidth = process.stdout.columns ?? 80;
-  const valueWidth = Math.max(20, termWidth - 22);
+  const valueWidth = Math.max(20, columns - 22);
   const displayTitle = String(data.name ?? title);
   const appliedTagIds = new Set(customerTags.map(assignment => assignment.tag?.id).filter(Boolean));
   const tagOptions: SelectItem<TagRow>[] = availableTags
@@ -263,7 +263,7 @@ function CustomerDossier({
           { key: 'q', label: 'back to customer' },
         ]} />
       )}>
-        <Box flexDirection="column" width={Math.min(process.stdout.columns ?? 80, 72)}>
+        <Box flexDirection="column" width={Math.min(columns, 72)}>
           <Header title={`Apply Tag: ${displayTitle}`} subtitle={agentName} showBack />
           {tagOptions.length > 0 ? (
             <SelectList

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useWindowSize } from 'ink';
 import { Header } from '../components/Header.js';
 import { SelectList, SelectItem } from '../components/SelectList.js';
 import { AsyncView } from '../components/AsyncView.js';
@@ -105,6 +105,7 @@ function TagListPage({
   const nextCursor = data.cursor ?? data.nextCursor ?? lastTag?.id ?? lastTag?.externalId;
   const canGoNext = !!data.hasMore && !!nextCursor;
   const { isConfirmingExit } = useExitConfirmation();
+  const { columns } = useWindowSize();
 
   useInput((input, key) => {
     if (tags.length === 0 && (key.escape || input === 'q')) onBack();
@@ -141,7 +142,7 @@ function TagListPage({
         { key: 'q', label: 'back' },
       ]} />
     )}>
-      <Box flexDirection="column" width={Math.min(process.stdout.columns ?? 80, 72)}>
+      <Box flexDirection="column" width={Math.min(columns, 72)}>
         <Header title="Tags" subtitle={agentName} showBack />
         {tags.length === 0 ? (
           <Text dimColor>No tags found. Press c to create one.</Text>

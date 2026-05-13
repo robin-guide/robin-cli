@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useWindowSize } from 'ink';
 
 interface DetailViewProps {
   data: Record<string, unknown>;
@@ -14,6 +14,7 @@ function formatValue(value: unknown): string {
 }
 
 export function DetailView({ data, title }: DetailViewProps): React.ReactElement {
+  const { columns: terminalWidth } = useWindowSize();
   const entries = Object.entries(data);
 
   if (entries.length === 0) {
@@ -30,8 +31,6 @@ export function DetailView({ data, title }: DetailViewProps): React.ReactElement
   }
 
   const maxKeyLen = Math.max(...entries.map(([k]) => k.length));
-  // Reserve space: key column + 4-char gap + at least some value space
-  const terminalWidth = process.stdout.columns ?? 80;
   const valueWidth = Math.max(20, terminalWidth - maxKeyLen - 6);
 
   return (

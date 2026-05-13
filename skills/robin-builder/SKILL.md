@@ -30,6 +30,8 @@ robin auth login
 robin config set default-agent <agentId>
 ```
 
+If creating a new Robin, a **team ID is required**. Run `robin teams list` to see available teams and confirm which one to use. Never create a Robin without assigning it to a team.
+
 ## What the CLI configures
 
 | What | CLI command |

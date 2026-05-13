@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import './proxy.js';
+import { createRequire } from 'module';
 import { Command } from 'commander';
 import { registerAuth } from './commands/auth.js';
 import { registerAgents } from './commands/agents.js';
@@ -9,17 +10,21 @@ import { registerAnnouncements } from './commands/announcements.js';
 import { registerTags } from './commands/tags.js';
 import { registerWebsites } from './commands/websites.js';
 import { registerInvitations } from './commands/invitations.js';
+import { registerTeams } from './commands/teams.js';
 import { registerConfig } from './commands/config.js';
 import { registerUI } from './commands/ui.js';
 import { registerChat } from './commands/chat.js';
 import { GlobalOpts, formatError } from './client.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json') as { version: string };
 
 const program = new Command();
 
 program
   .name('robin')
   .description('Robin API CLI — scriptable access to the Robin platform')
-  .version('0.1.0')
+  .version(version)
   // Global flags
   .option('--json', 'Output raw JSON (machine-readable)')
   .option('--api-key <key>', 'Override stored API key')
@@ -40,6 +45,7 @@ registerAnnouncements(program, getGlobalOpts);
 registerTags(program, getGlobalOpts);
 registerWebsites(program, getGlobalOpts);
 registerInvitations(program, getGlobalOpts);
+registerTeams(program, getGlobalOpts);
 registerUI(program);
 registerChat(program, getGlobalOpts);
 

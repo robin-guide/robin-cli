@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useWindowSize } from 'ink';
 import { Header } from '../components/Header.js';
 import { SelectList, SelectItem } from '../components/SelectList.js';
 import { AsyncView } from '../components/AsyncView.js';
@@ -113,9 +113,11 @@ function ConversationListPage({
   const nextCursor = data.nextCursor ?? undefined;
   const canGoNext = !!data.hasMore && !!nextCursor;
   const { isConfirmingExit } = useExitConfirmation();
+  const { columns } = useWindowSize();
   const title = customerName ? `Conversations: ${customerName}` : 'Conversations';
 
-  useInput((input) => {
+  useInput((input, key) => {
+    if (key.escape || input === 'q') { onBack(); return; }
     if (input === 'n' && canGoNext) onNext(nextCursor);
     if (input === 'p' && canGoBack) onPrevious();
   }, { isActive: !isConfirmingExit });
@@ -144,7 +146,7 @@ function ConversationListPage({
         { key: 'q', label: 'back' },
       ]} />
     )}>
-      <Box flexDirection="column" width={Math.min(process.stdout.columns ?? 80, 72)}>
+      <Box flexDirection="column" width={Math.min(columns, 72)}>
         <Header title={title} subtitle={agentName} showBack />
         {threads.length === 0 ? (
           <Text dimColor>{customerName ? 'No conversations found for this customer.' : 'No conversations found.'}</Text>

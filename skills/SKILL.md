@@ -226,6 +226,7 @@ For more complex workflows, see:
 - Build or configure a Robin from scratch: [`skills/robin-builder/SKILL.md`](./robin-builder/SKILL.md)
 - Write, target, and schedule announcements: [`skills/announcement-builder/SKILL.md`](./announcement-builder/SKILL.md)
 - Analyze conversations and produce a quality report: [`skills/conversation-assessment/SKILL.md`](./conversation-assessment/SKILL.md)
+- Manage contacts and tags, including bulk imports: [`skills/robin-contacts-management/SKILL.md`](./robin-contacts-management/SKILL.md)
 
 ---
 

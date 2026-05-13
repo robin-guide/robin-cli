@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useWindowSize } from 'ink';
 import { Header } from '../components/Header.js';
 import { SelectList, SelectItem } from '../components/SelectList.js';
 import { AsyncView } from '../components/AsyncView.js';
@@ -112,6 +112,7 @@ function CustomerListPage({
   const nextCursor = data.cursor ?? data.nextCursor;
   const canGoNext = !!data.hasMore && !!nextCursor;
   const { isConfirmingExit } = useExitConfirmation();
+  const { columns } = useWindowSize();
   const pageSubscriberCount = customers.filter(customer => getOptedIn(customer) === true).length;
   const totalCount = data.totalCount ?? data.total ?? data.count;
   const subscriberCount = data.subscriberCount ?? data.optedInCount;
@@ -153,7 +154,7 @@ function CustomerListPage({
         { key: 'q', label: 'back' },
       ]} />
     )}>
-      <Box flexDirection="column" width={Math.min(process.stdout.columns ?? 80, 72)}>
+      <Box flexDirection="column" width={Math.min(columns, 72)}>
         <Header title="Customers" subtitle={agentName} showBack />
         <Text dimColor>
           {totalCount !== undefined ? `${totalCount} total customer${totalCount === 1 ? '' : 's'} · ` : ''}
