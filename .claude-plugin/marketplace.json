@@ -1,0 +1,15 @@
+{
+  "name": "robin",
+  "description": "Official Robin plugins for Claude Code and Cowork",
+  "owner": {
+    "name": "Robin",
+    "email": "hello@robin.guide"
+  },
+  "plugins": [
+    {
+      "name": "robin",
+      "source": "./claude-plugin",
+      "description": "Scriptable access to the Robin platform — configure agents, manage contacts, send announcements, review conversations, and more."
+    }
+  ]
+}
