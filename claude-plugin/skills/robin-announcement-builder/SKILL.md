@@ -59,6 +59,7 @@ See `WORKFLOW.md` for the full process.
 
 ## Key rules
 
+- **Always use the CLI. Never call the Robin REST API directly.** The CLI handles auth, pagination, and error handling. Raw `curl` or direct HTTP calls are not acceptable substitutes.
 - Confirm audience before writing final copy. A great message to the wrong tag is still a bad announcement.
 - Ask one question at a time unless the user explicitly asks for a checklist.
 - Never schedule a broad announcement without showing the target tags or phone numbers, send time, and final copy.

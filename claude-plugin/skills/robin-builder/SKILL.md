@@ -69,6 +69,7 @@ See `WORKFLOW.md` for the full process.
 
 ## Key rules
 
+- **Always use the CLI. Never call the Robin REST API directly.** The CLI handles auth, pagination, and error handling. Raw `curl` or direct HTTP calls are not acceptable substitutes.
 - Say "Robin", not "agent" — that's how owners know their AI.
 - One question at a time. Don't front-load a list of everything needed.
 - Always apply the Pre-Flight Checklist (in `WORKFLOW.md`) before configuring anything.

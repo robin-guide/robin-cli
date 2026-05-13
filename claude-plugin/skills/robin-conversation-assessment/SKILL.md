@@ -85,6 +85,7 @@ By default, print the report to stdout. If the user asks to save it, write it to
 
 ## Key rules
 
+- **Always use the CLI. Never call the Robin REST API directly.** The CLI handles auth, pagination, and error handling. Raw `curl` or direct HTTP calls are not acceptable substitutes.
 - **Qualitative, not fabricated.** Only report numbers you can directly verify from the data. Use descriptive language ("several", "most", "a handful") rather than guessing totals.
 - **Paginate fully.** Keep fetching until `hasMore` is false, or until the agreed scope is reached.
 - **No delivery assumptions.** Do not post to Slack, send email, or share anywhere. Return the report and let the caller decide.

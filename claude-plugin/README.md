@@ -20,7 +20,15 @@ Scriptable access to the [Robin](https://robin.guide) platform from Claude Cowor
 
 ## Install the Plugin
 
-**In Cowork or Claude Code:**
+**In Cowork (Claude Desktop):**
+
+1. Open the Cowork tab
+2. Click *Customize*
+3. Select *Marketplaces → Add marketplace*
+4. Enter: `https://github.com/robin-guide/robin-cli`
+5. Find the Robin plugin and install it
+
+**In Claude Code (terminal):**
 
 ```
 /plugin marketplace add robin-guide/robin-cli
