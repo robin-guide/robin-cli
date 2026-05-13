@@ -1,6 +1,6 @@
 {
   "name": "robin",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "Scriptable access to the Robin platform — configure agents, manage contacts, send announcements, review conversations, and more.",
   "author": {
     "name": "Robin",
