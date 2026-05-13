@@ -13,7 +13,7 @@ Scriptable command-line access to the [Robin](https://robin.guide) platform. Bui
 ## Install
 
 ```bash
-npm install -g @robinai/cli
+npm install -g @robinai/cli@latest
 ```
 
 ## Quick Start

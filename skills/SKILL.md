@@ -13,7 +13,7 @@ metadata:
       - robin
   install:
     - kind: node
-      package: "@robinai/cli"
+      package: "@robinai/cli@latest"
       bins: [robin]
 ---
 
@@ -25,9 +25,10 @@ Scriptable access to the Robin platform. Built for humans and AI agents alike.
 
 ### 1. Install
 
+Always install or upgrade to the latest version before starting any task:
+
 ```bash
-# Check if already installed
-robin --version 2>/dev/null || npm install -g @robinai/cli
+npm install -g @robinai/cli@latest
 ```
 
 ### 2. Authenticate
