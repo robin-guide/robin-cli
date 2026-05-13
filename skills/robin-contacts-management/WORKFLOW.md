@@ -67,8 +67,8 @@ with open('contacts.csv', newline='', encoding='utf-8-sig') as f:
 contacts = []
 for r in rows:
     contacts.append({
-        "name":  r.get("name") or r.get("Name") or r.get("full_name", "").strip(),
-        "phone": r.get("phone") or r.get("Phone") or r.get("mobile", "").strip(),
+        "name":        r.get("name") or r.get("Name") or r.get("full_name", "").strip(),
+        "phoneNumber": r.get("phoneNumber") or r.get("phone") or r.get("Phone") or r.get("mobile", "").strip(),
     })
 
 with open('contacts_raw.json', 'w') as f:
@@ -84,11 +84,10 @@ Required fields per contact:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `phone` | Yes | E.164 format — see step 3 |
+| `phoneNumber` | Yes | E.164 format — see step 4 |
 | `name` | Recommended | Display name |
 | `notes` | No | Internal notes |
 | `optedIn` | No | `true` only with confirmed consent |
-| `welcomeMessage` | No | Override per-contact welcome |
 
 ### 4. Normalize phone numbers to E.164
 
@@ -112,9 +111,9 @@ with open('contacts_raw.json') as f:
 
 clean, rejected = [], []
 for c in contacts:
-    normalized = normalize_phone(c.get('phone', ''))
+    normalized = normalize_phone(c.get('phoneNumber', ''))
     if normalized:
-        c['phone'] = normalized
+        c['phoneNumber'] = normalized
         clean.append(c)
     else:
         rejected.append(c)
@@ -139,10 +138,10 @@ with open('contacts_clean.json') as f:
 
 seen, deduped, dupes = set(), [], []
 for c in contacts:
-    if c['phone'] in seen:
+    if c['phoneNumber'] in seen:
         dupes.append(c)
     else:
-        seen.add(c['phone'])
+        seen.add(c['phoneNumber'])
         deduped.append(c)
 
 with open('contacts_clean.json', 'w') as f:
@@ -263,12 +262,12 @@ import json
 with open('import_result.json') as f:
     result = json.load(f)
 
-failed_phones = {r['phone'] for r in result.get('failed', [])}
+failed_phones = {r['phoneNumber'] for r in result.get('failed', [])}
 
 with open('contacts_clean.json') as f:
     contacts = json.load(f)
 
-retry = [c for c in contacts if c['phone'] in failed_phones]
+retry = [c for c in contacts if c['phoneNumber'] in failed_phones]
 
 with open('contacts_retry.json', 'w') as f:
     json.dump(retry, f, indent=2)

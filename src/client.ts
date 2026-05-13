@@ -15,8 +15,8 @@ export type QueryValue = string | string[] | number | boolean | undefined;
 /** Minimal interface for components that only need to call the API. */
 export interface RobinClient {
   get: <T>(path: string, query?: Record<string, QueryValue>) => Promise<T>;
-  post: <T>(path: string, body?: unknown) => Promise<T>;
-  patch: <T>(path: string, body?: unknown) => Promise<T>;
+  post: <T>(path: string, body?: unknown, query?: Record<string, QueryValue>) => Promise<T>;
+  patch: <T>(path: string, body?: unknown, query?: Record<string, QueryValue>) => Promise<T>;
   delete: <T>(path: string) => Promise<T>;
 }
 
@@ -106,8 +106,8 @@ export function createClient(opts: GlobalOpts) {
   return {
     get: <T>(path: string, query?: Record<string, string | string[] | number | boolean | undefined>) =>
       request<T>('GET', path, undefined, query),
-    post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
-    patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
+    post: <T>(path: string, body?: unknown, query?: Record<string, string | string[] | number | boolean | undefined>) => request<T>('POST', path, body, query),
+    patch: <T>(path: string, body?: unknown, query?: Record<string, string | string[] | number | boolean | undefined>) => request<T>('PATCH', path, body, query),
     delete: <T>(path: string) => request<T>('DELETE', path),
   } as RobinClient;
 }
