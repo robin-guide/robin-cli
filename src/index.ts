@@ -3,8 +3,6 @@ import './proxy.js';
 import { createRequire } from 'module';
 import { Command } from 'commander';
 
-const require = createRequire(import.meta.url);
-const { version } = require('../package.json');
 import { registerAuth } from './commands/auth.js';
 import { registerAgents } from './commands/agents.js';
 import { registerCustomers } from './commands/customers.js';
