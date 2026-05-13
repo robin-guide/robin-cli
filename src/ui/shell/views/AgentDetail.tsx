@@ -2,22 +2,14 @@ import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { HelpBar } from '../components/HelpBar.js';
 import { Screen } from '../components/Screen.js';
-import { AsyncView } from '../components/AsyncView.js';
 import { useExitConfirmation } from '../../components/ExitConfirmation.js';
-import type { RobinClient } from '../../../client.js';
 import type { Route } from '../App.js';
 
 interface AgentDetailProps {
   agentId: string;
   agentName: string;
-  client: RobinClient;
   onNavigate: (route: Route) => void;
   onBack: () => void;
-}
-
-interface AgentData {
-  phoneNumber?: string;
-  phone_number?: string;
 }
 
 interface MenuItem {
@@ -29,35 +21,7 @@ interface MenuItem {
 
 const CARD_WIDTH = 52;
 
-export function AgentDetail({ agentId, agentName, client, onNavigate, onBack }: AgentDetailProps): React.ReactElement {
-  return (
-    <AsyncView
-      work={() => client.get<AgentData>(`/agents/${agentId}`)}
-      loadingMessage="Loading Robin…"
-      onBack={onBack}
-    >
-      {(agent) => (
-        <AgentDetailInner
-          agentId={agentId}
-          agentName={agentName}
-          hasPhoneNumber={Boolean(agent.phoneNumber ?? agent.phone_number)}
-          onNavigate={onNavigate}
-          onBack={onBack}
-        />
-      )}
-    </AsyncView>
-  );
-}
-
-interface AgentDetailInnerProps {
-  agentId: string;
-  agentName: string;
-  hasPhoneNumber: boolean;
-  onNavigate: (route: Route) => void;
-  onBack: () => void;
-}
-
-function AgentDetailInner({ agentId, agentName, hasPhoneNumber, onNavigate, onBack }: AgentDetailInnerProps): React.ReactElement {
+export function AgentDetail({ agentId, agentName, onNavigate, onBack }: AgentDetailProps): React.ReactElement {
   const [cursor, setCursor] = useState(0);
   const { isConfirmingExit } = useExitConfirmation();
 
@@ -86,12 +50,12 @@ function AgentDetailInner({ agentId, agentName, hasPhoneNumber, onNavigate, onBa
       description: 'Create and tune audience tags',
       route: { type: 'tags', agentId, agentName },
     },
-    ...(hasPhoneNumber ? [{
+    {
       id: 'announcements',
       label: 'Announcements',
       description: 'Create and manage SMS announcements for opted-in contacts',
       route: { type: 'announcements' as const, agentId, agentName },
-    }] : []),
+    },
   ];
 
   useInput((input, key) => {

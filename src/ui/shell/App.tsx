@@ -126,7 +126,6 @@ export function App({ apiKey, baseUrl, agentId: initialAgentId }: AppProps): Rea
         <AgentDetail
           agentId={current.agentId}
           agentName={current.agentName}
-          client={client}
           onNavigate={push}
           onBack={pop}
         />

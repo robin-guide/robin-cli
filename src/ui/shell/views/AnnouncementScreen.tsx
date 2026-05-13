@@ -534,7 +534,14 @@ function AnnouncementForm({
         tagIds: selectedTagIds,
       })
       .then(res => {
-        setTagCount(res?.totalCount ?? null);
+        if (res?.tagBreakdown && res.tagBreakdown.length > 0) {
+          const total = res.tagBreakdown
+            .filter(b => selectedTagIds.includes(b.tagId))
+            .reduce((sum, b) => sum + b.count, 0);
+          setTagCount(total);
+        } else {
+          setTagCount(res?.totalCount ?? null);
+        }
       })
       .catch(() => setTagCount(null))
       .finally(() => setIsLoadingTagCount(false));
