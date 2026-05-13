@@ -193,18 +193,18 @@ export function registerCustomers(program: Command, getGlobalOpts: () => GlobalO
         process.exit(1);
       }
       const body = {
-        agentId,
         contacts,
         ...(cmdOpts.tagIds && { tagIds: cmdOpts.tagIds }),
       };
+      const query = { agentId };
       if (opts.json) {
-        try { outputJSON(await client.post<unknown>('/customers/bulk', body)); }
+        try { outputJSON(await client.post<unknown>('/customers/bulk', body, query)); }
         catch (err) { handleError(err); }
         return;
       }
       renderCommand(
         async () => {
-          const data = await client.post<Record<string, unknown>>('/customers/bulk', body);
+          const data = await client.post<Record<string, unknown>>('/customers/bulk', body, query);
           return React.createElement(DetailView, { data, title: 'Bulk Import Result' });
         },
         'Importing customers…',
