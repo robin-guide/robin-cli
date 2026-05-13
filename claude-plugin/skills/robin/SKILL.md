@@ -220,6 +220,16 @@ robin invitations revoke <invitationId> --yes
 
 ---
 
+## Key rules
+
+- **Always use the CLI. Never call the Robin REST API directly.** The CLI handles auth, pagination, error handling, and output formatting. Raw `curl` or direct HTTP calls are not acceptable substitutes.
+- Always install or upgrade the CLI before starting any task: `npm install -g @robinai/cli@latest`
+- Pass `--json` for any output you need to process or display programmatically.
+- Always include `--commit-message` on agent update commands — it is stored in the audit log.
+- Say "Robin", not "agent" — that is how owners refer to their AI.
+
+---
+
 ## Sub-skills
 
 For more complex workflows, see:

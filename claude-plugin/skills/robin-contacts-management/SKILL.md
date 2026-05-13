@@ -193,6 +193,7 @@ The `--file` must be a JSON array. The CLI does not accept CSV directly:
 
 ## Key rules
 
+- **Always use the CLI. Never call the Robin REST API directly.** The CLI handles auth, pagination, and error handling. Raw `curl` or direct HTTP calls are not acceptable substitutes.
 - Speak in **contacts**; the CLI surface uses `customers`.
 - Phone numbers must be **E.164** (`+15551234567`). Validate before submitting — fix locally rather than letting the API reject the whole batch.
 - Always resolve the Robin first — contacts and tags are agent-scoped. Use `robin config get default-agent` or pass `--agent` explicitly.
