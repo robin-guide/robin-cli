@@ -1,6 +1,6 @@
 # Robin Plugin
 
-Scriptable access to the [Robin](https://robin.guide) platform from Cowork. Configure agents, manage contacts, write and schedule announcements, review conversations, and run QA tests — all via the Robin CLI.
+Scriptable access to the [Robin](https://robin.guide) platform from Claude Cowork and Claude Code. Configure agents, manage contacts, write and schedule announcements, review conversations, and run QA tests — all via the Robin CLI.
 
 ## Requirements
 
@@ -18,7 +18,17 @@ Scriptable access to the [Robin](https://robin.guide) platform from Cowork. Conf
 | **robin-conversation-assessment** | "assess conversations", "how is the Robin performing?", "what questions is the Robin stumped on?", "QA the Robin", "create a test plan" |
 | **robin-contacts-management** | "add a contact", "bulk import contacts", "tag all VIPs", "find a contact by phone", "clean up tags" |
 
-## Setup
+## Install the Plugin
+
+**In Cowork or Claude Code:**
+
+```
+/plugin marketplace add robin-guide/robin-cli
+/plugin install robin@robin
+/reload-plugins
+```
+
+## Setup (CLI)
 
 ```bash
 # Install the CLI
